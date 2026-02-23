@@ -17,22 +17,14 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+// Use plugin hooks to configure Android subprojects without using afterEvaluate
 subprojects {
-    val configureAndroid: (Project) -> Unit = { proj ->
-        val extension = proj.extensions.findByName("android")
-        if (extension is com.android.build.gradle.BaseExtension) {
-            extension.compileSdkVersion(35)
-            if (extension.namespace == null) {
-                extension.namespace = "org.gridwalker.${proj.name.replace("-", "_")}"
-            }
-        }
-    }
-
-    if (project.state.executed) {
-        configureAndroid(project)
-    } else {
-        project.afterEvaluate {
-            configureAndroid(project)
+    plugins.withType<com.android.build.gradle.BasePlugin> {
+        val android = project.extensions.getByType<com.android.build.gradle.BaseExtension>()
+        android.compileSdkVersion(35)
+        
+        if (android.namespace == null) {
+            android.namespace = "org.gridwalker.${project.name.replace("-", "_")}"
         }
     }
 }
