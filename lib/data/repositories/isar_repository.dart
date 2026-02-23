@@ -34,6 +34,11 @@ class IsarRepository {
     await _isar.writeTxn(() => _isar.gridCells.put(cell));
   }
 
+  // --- Markers ---
+  Future<List<SubjectRecord>> getAllMarkers() async {
+    return _isar.subjectRecords.where().anyId().findAll();
+  }
+
   // --- Subject Records ---
   Future<List<SubjectRecord>> getSubjectsByCounty(String state, String county) {
     return _isar.subjectRecords

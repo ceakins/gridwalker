@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../data/local/grid_cell.dart';
+import '../../data/local/subject_record.dart';
 
 enum AppStatus { initial, loading, authenticated, ready, tracking, syncing, error }
 
@@ -13,6 +14,7 @@ class AppState extends Equatable {
   final bool is3D;
   final Position? currentPosition;
   final List<GridCell> gridCells;
+  final List<SubjectRecord> markers;
 
   const AppState({
     this.status = AppStatus.initial,
@@ -23,6 +25,7 @@ class AppState extends Equatable {
     this.is3D = false,
     this.currentPosition,
     this.gridCells = const [],
+    this.markers = const [],
   });
 
   AppState copyWith({
@@ -34,6 +37,7 @@ class AppState extends Equatable {
     bool? is3D,
     Position? currentPosition,
     List<GridCell>? gridCells,
+    List<SubjectRecord>? markers,
   }) {
     return AppState(
       status: status ?? this.status,
@@ -44,9 +48,10 @@ class AppState extends Equatable {
       is3D: is3D ?? this.is3D,
       currentPosition: currentPosition ?? this.currentPosition,
       gridCells: gridCells ?? this.gridCells,
+      markers: markers ?? this.markers,
     );
   }
 
   @override
-  List<Object?> get props => [status, errorMessage, isTracking, isSyncing, isSatellite, is3D, currentPosition, gridCells];
+  List<Object?> get props => [status, errorMessage, isTracking, isSyncing, isSatellite, is3D, currentPosition, gridCells, markers];
 }

@@ -17,10 +17,14 @@ class SubjectRecord {
 
   late String name;
   
-  late String geoJson; // GeoJSON Feature representing the subject's last known location or area
+  late String geoJson; // GeoJSON Point for the marker location
 
   late DateTime lastUpdated;
 
   @Index()
   late bool isActive;
+
+  /// Type of marker: 'subject', 'clue', 'poi'
+  @Index()
+  late String markerType;
 }

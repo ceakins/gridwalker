@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../data/local/grid_cell.dart';
+import '../../data/local/subject_record.dart';
 import '../../data/repositories/isar_repository.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../features/tracking/tracking_service.dart';
@@ -39,6 +40,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<Toggle3D>(_onToggle3D);
     on<ExportGrid>(_onExportGrid);
     on<ImportGrid>(_onImportGrid);
+    on<AddMarker>(_onAddMarker);
     on<CreateSearchZone>(_onCreateSearchZone);
     on<PositionUpdated>(_onPositionUpdated);
     on<GridUpdated>(_onGridUpdated);
@@ -48,24 +50,54 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     _gridSub = trackingService.gridStream.listen((g) => add(GridUpdated(g)));
   }
 
+  Future<void> _onAddMarker(AddMarker event, Emitter<AppState> emit) async {
+    final marker = SubjectRecord()
+      ..name = event.name
+      ..markerType = event.type
+      ..state = "AZ"
+      ..county = "Yavapai"
+      ..caseId = "current"
+      ..isActive = true
+      ..lastUpdated = DateTime.now()
+      ..geoJson = '{"type": "Point", "coordinates": [${event.lng}, ${event.lat}]}';
+
+    await isarRepository.saveSubject(marker);
+    final allMarkers = await isarRepository.getAllMarkers();
+    emit(state.copyWith(markers: allMarkers));
+  }
+
   Future<void> _onExportGrid(ExportGrid event, Emitter<AppState> emit) async {
     try {
       final cells = await isarRepository.getAllGridCells();
-      final List<Map<String, dynamic>> data = cells.map((c) => {
-        'x': c.x,
-        'y': c.y,
-        'state': c.state,
-        'county': c.county,
-        'coverage': c.coverage,
-        'geoJson': c.geoJson,
-      }).toList();
+      final markers = await isarRepository.getAllMarkers();
 
-      final jsonStr = jsonEncode(data);
+      final Map<String, dynamic> exportData = {
+        'version': 1,
+        'exportDate': DateTime.now().toIso8601String(),
+        'grid': cells.map((c) => {
+          'x': c.x,
+          'y': c.y,
+          'state': c.state,
+          'county': c.county,
+          'coverage': c.coverage,
+          'geoJson': c.geoJson,
+        }).toList(),
+        'markers': markers.map((m) => {
+          'name': m.name,
+          'markerType': m.markerType,
+          'state': m.state,
+          'county': m.county,
+          'caseId': m.caseId,
+          'geoJson': m.geoJson,
+        }).toList(),
+      };
+
+      final jsonStr = jsonEncode(exportData);
       final tempDir = await getTemporaryDirectory();
-      final file = File('${tempDir.path}/gridwalker_export.json');
+      final file = File('${tempDir.path}/gridwalker_sar_data.json');
       await file.writeAsString(jsonStr);
 
-      await Share.shareXFiles([XFile(file.path)], text: 'GridWalker Search Grid Export');
+      await Share.shareXFiles([XFile(file.path)], text: 'GridWalker SAR Search Data');
     } catch (e) {
       emit(state.copyWith(errorMessage: 'Export failed: $e'));
     }
@@ -81,23 +113,42 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       if (result != null && result.files.single.path != null) {
         final file = File(result.files.single.path!);
         final jsonStr = await file.readAsString();
-        final List<dynamic> data = jsonDecode(jsonStr);
+        final Map<String, dynamic> data = jsonDecode(jsonStr);
 
-        for (var item in data) {
-          final cell = GridCell()
-            ..x = item['x']
-            ..y = item['y']
-            ..state = item['state']
-            ..county = item['county']
-            ..coverage = item['coverage']
-            ..lastCleared = DateTime.now()
-            ..geoJson = item['geoJson'];
-          
-          await isarRepository.updateGridCell(cell);
+        // Import Grid Cells
+        if (data.containsKey('grid')) {
+          for (var item in data['grid']) {
+            final cell = GridCell()
+              ..x = item['x']
+              ..y = item['y']
+              ..state = item['state']
+              ..county = item['county']
+              ..coverage = item['coverage']
+              ..lastCleared = DateTime.now()
+              ..geoJson = item['geoJson'];
+            await isarRepository.updateGridCell(cell);
+          }
+        }
+
+        // Import Markers
+        if (data.containsKey('markers')) {
+          for (var item in data['markers']) {
+            final marker = SubjectRecord()
+              ..name = item['name']
+              ..markerType = item['markerType']
+              ..state = item['state']
+              ..county = item['county']
+              ..caseId = item['caseId']
+              ..isActive = true
+              ..lastUpdated = DateTime.now()
+              ..geoJson = item['geoJson'];
+            await isarRepository.saveSubject(marker);
+          }
         }
 
         final allCells = await isarRepository.getAllGridCells();
-        emit(state.copyWith(gridCells: allCells));
+        final allMarkers = await isarRepository.getAllMarkers();
+        emit(state.copyWith(gridCells: allCells, markers: allMarkers));
       }
     } catch (e) {
       emit(state.copyWith(errorMessage: 'Import failed: $e'));
@@ -118,7 +169,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
   Future<void> _onClearGrid(ClearGrid event, Emitter<AppState> emit) async {
     await isarRepository.clearAllData();
-    emit(state.copyWith(gridCells: []));
+    emit(state.copyWith(gridCells: [], markers: []));
   }
 
   Future<void> _onCreateSearchZone(CreateSearchZone event, Emitter<AppState> emit) async {
@@ -162,7 +213,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
   Future<void> _onAppStarted(AppStarted event, Emitter<AppState> emit) async {
     final allCells = await isarRepository.getAllGridCells();
-    emit(state.copyWith(status: AppStatus.ready, gridCells: allCells));
+    final allMarkers = await isarRepository.getAllMarkers();
+    emit(state.copyWith(status: AppStatus.ready, gridCells: allCells, markers: allMarkers));
   }
 
   Future<void> _onStartTracking(StartTracking event, Emitter<AppState> emit) async {

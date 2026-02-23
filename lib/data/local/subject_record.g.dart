@@ -42,13 +42,18 @@ const SubjectRecordSchema = CollectionSchema(
       name: r'lastUpdated',
       type: IsarType.dateTime,
     ),
-    r'name': PropertySchema(
+    r'markerType': PropertySchema(
       id: 5,
+      name: r'markerType',
+      type: IsarType.string,
+    ),
+    r'name': PropertySchema(
+      id: 6,
       name: r'name',
       type: IsarType.string,
     ),
     r'state': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'state',
       type: IsarType.string,
     )
@@ -110,6 +115,19 @@ const SubjectRecordSchema = CollectionSchema(
           caseSensitive: false,
         )
       ],
+    ),
+    r'markerType': IndexSchema(
+      id: -436838648463439058,
+      name: r'markerType',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'markerType',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
     )
   },
   links: {},
@@ -129,6 +147,7 @@ int _subjectRecordEstimateSize(
   bytesCount += 3 + object.caseId.length * 3;
   bytesCount += 3 + object.county.length * 3;
   bytesCount += 3 + object.geoJson.length * 3;
+  bytesCount += 3 + object.markerType.length * 3;
   bytesCount += 3 + object.name.length * 3;
   bytesCount += 3 + object.state.length * 3;
   return bytesCount;
@@ -145,8 +164,9 @@ void _subjectRecordSerialize(
   writer.writeString(offsets[2], object.geoJson);
   writer.writeBool(offsets[3], object.isActive);
   writer.writeDateTime(offsets[4], object.lastUpdated);
-  writer.writeString(offsets[5], object.name);
-  writer.writeString(offsets[6], object.state);
+  writer.writeString(offsets[5], object.markerType);
+  writer.writeString(offsets[6], object.name);
+  writer.writeString(offsets[7], object.state);
 }
 
 SubjectRecord _subjectRecordDeserialize(
@@ -162,8 +182,9 @@ SubjectRecord _subjectRecordDeserialize(
   object.id = id;
   object.isActive = reader.readBool(offsets[3]);
   object.lastUpdated = reader.readDateTime(offsets[4]);
-  object.name = reader.readString(offsets[5]);
-  object.state = reader.readString(offsets[6]);
+  object.markerType = reader.readString(offsets[5]);
+  object.name = reader.readString(offsets[6]);
+  object.state = reader.readString(offsets[7]);
   return object;
 }
 
@@ -187,6 +208,8 @@ P _subjectRecordDeserializeProp<P>(
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
+      return (reader.readString(offset)) as P;
+    case 7:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -671,6 +694,51 @@ extension SubjectRecordQueryWhere
               indexName: r'isActive',
               lower: [],
               upper: [isActive],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterWhereClause>
+      markerTypeEqualTo(String markerType) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'markerType',
+        value: [markerType],
+      ));
+    });
+  }
+
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterWhereClause>
+      markerTypeNotEqualTo(String markerType) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'markerType',
+              lower: [],
+              upper: [markerType],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'markerType',
+              lower: [markerType],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'markerType',
+              lower: [markerType],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'markerType',
+              lower: [],
+              upper: [markerType],
               includeUpper: false,
             ));
       }
@@ -1208,6 +1276,142 @@ extension SubjectRecordQueryFilter
     });
   }
 
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterFilterCondition>
+      markerTypeEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'markerType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterFilterCondition>
+      markerTypeGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'markerType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterFilterCondition>
+      markerTypeLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'markerType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterFilterCondition>
+      markerTypeBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'markerType',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterFilterCondition>
+      markerTypeStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'markerType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterFilterCondition>
+      markerTypeEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'markerType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterFilterCondition>
+      markerTypeContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'markerType',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterFilterCondition>
+      markerTypeMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'markerType',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterFilterCondition>
+      markerTypeIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'markerType',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterFilterCondition>
+      markerTypeIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'markerType',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<SubjectRecord, SubjectRecord, QAfterFilterCondition> nameEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1550,6 +1754,19 @@ extension SubjectRecordQuerySortBy
     });
   }
 
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterSortBy> sortByMarkerType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'markerType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterSortBy>
+      sortByMarkerTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'markerType', Sort.desc);
+    });
+  }
+
   QueryBuilder<SubjectRecord, SubjectRecord, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -1651,6 +1868,19 @@ extension SubjectRecordQuerySortThenBy
     });
   }
 
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterSortBy> thenByMarkerType() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'markerType', Sort.asc);
+    });
+  }
+
+  QueryBuilder<SubjectRecord, SubjectRecord, QAfterSortBy>
+      thenByMarkerTypeDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'markerType', Sort.desc);
+    });
+  }
+
   QueryBuilder<SubjectRecord, SubjectRecord, QAfterSortBy> thenByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -1712,6 +1942,13 @@ extension SubjectRecordQueryWhereDistinct
     });
   }
 
+  QueryBuilder<SubjectRecord, SubjectRecord, QDistinct> distinctByMarkerType(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'markerType', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<SubjectRecord, SubjectRecord, QDistinct> distinctByName(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1763,6 +2000,12 @@ extension SubjectRecordQueryProperty
       lastUpdatedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastUpdated');
+    });
+  }
+
+  QueryBuilder<SubjectRecord, String, QQueryOperations> markerTypeProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'markerType');
     });
   }
 

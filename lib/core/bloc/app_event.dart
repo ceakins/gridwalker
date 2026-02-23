@@ -33,6 +33,23 @@ class ExportGrid extends AppEvent {}
 
 class ImportGrid extends AppEvent {}
 
+class AddMarker extends AppEvent {
+  final String name;
+  final String type;
+  final double lat;
+  final double lng;
+
+  const AddMarker({
+    required this.name,
+    required this.type,
+    required this.lat,
+    required this.lng,
+  });
+
+  @override
+  List<Object?> get props => [name, type, lat, lng];
+}
+
 class CreateSearchZone extends AppEvent {
   final double minLat;
   final double maxLat;
