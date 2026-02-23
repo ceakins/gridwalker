@@ -8,6 +8,7 @@ import 'data/repositories/isar_repository.dart';
 import 'data/repositories/settings_repository.dart';
 import 'features/tracking/tracking_service.dart';
 import 'features/sync/github_sync_service.dart';
+import 'features/splash/pages/splash_page.dart';
 import 'features/map/pages/map_page.dart';
 
 Future<void> main() async {
@@ -79,7 +80,7 @@ class MyApp extends StatelessWidget {
              primarySwatch: Colors.orange,
           ),
           themeMode: ThemeMode.system,
-          home: const MapPage(),
+          home: const SplashPage(),
         ),
       ),
     );
