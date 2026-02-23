@@ -38,7 +38,8 @@ class _MapPageState extends State<MapPage> {
       "satellite-tiles": {
         "type": "raster",
         "tiles": ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
-        "tileSize": 256
+        "tileSize": 256,
+        "maxzoom": 18
       }
     },
     "layers": [{"id": "satellite-layer", "type": "raster", "source": "satellite-tiles"}]
@@ -209,6 +210,7 @@ class _MapPageState extends State<MapPage> {
             onMapCreated: _onMapCreated,
             onStyleLoadedCallback: _onStyleLoaded,
             initialCameraPosition: const CameraPosition(target: LatLng(34.5400, -112.4685), zoom: 14.0),
+            minMaxZoomPreference: MinMaxZoomPreference(0.0, _isSatellite ? 18.0 : 22.0),
             styleString: _isSatellite ? _satelliteStyle : _vectorStyle,
             myLocationEnabled: false, 
             trackCameraPosition: true,
