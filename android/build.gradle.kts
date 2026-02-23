@@ -17,16 +17,22 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
-// Force all subprojects to use compatible SDK and Namespace
-allprojects {
-    afterEvaluate {
-        val extension = project.extensions.findByName("android")
+subprojects {
+    val configureAndroid: (Project) -> Unit = { proj ->
+        val extension = proj.extensions.findByName("android")
         if (extension is com.android.build.gradle.BaseExtension) {
-            extension.compileSdkVersion(35) // Fixes 'lStar' and other resource errors
-            
+            extension.compileSdkVersion(35)
             if (extension.namespace == null) {
-                extension.namespace = "org.gridwalker.${project.name.replace("-", "_")}"
+                extension.namespace = "org.gridwalker.${proj.name.replace("-", "_")}"
             }
+        }
+    }
+
+    if (project.state.executed) {
+        configureAndroid(project)
+    } else {
+        project.afterEvaluate {
+            configureAndroid(project)
         }
     }
 }
