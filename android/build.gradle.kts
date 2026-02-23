@@ -17,12 +17,15 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
-subprojects {
-    if (project.name == "isar_flutter_libs") {
-        project.afterEvaluate {
-            val extension = project.extensions.findByName("android")
-            if (extension is com.android.build.gradle.BaseExtension) {
-                extension.namespace = "dev.isar.isar_flutter_libs"
+// Force all subprojects to use compatible SDK and Namespace
+allprojects {
+    afterEvaluate {
+        val extension = project.extensions.findByName("android")
+        if (extension is com.android.build.gradle.BaseExtension) {
+            extension.compileSdkVersion(35) // Fixes 'lStar' and other resource errors
+            
+            if (extension.namespace == null) {
+                extension.namespace = "org.gridwalker.${project.name.replace("-", "_")}"
             }
         }
     }
