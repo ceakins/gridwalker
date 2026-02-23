@@ -121,7 +121,7 @@ class _MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('GridWalker SR'),
+        title: const Text('GridWalker SAR'),
         backgroundColor: Colors.orange[800],
         actions: [
           IconButton(
