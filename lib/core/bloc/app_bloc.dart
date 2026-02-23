@@ -39,17 +39,19 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   }
 
   Future<void> _onCreateSearchZone(CreateSearchZone event, Emitter<AppState> emit) async {
-    const double gridSize = 0.00001; // ~1.1m cells for person-level search resolution
+    const double gridSize = 0.0001; // ~11m (The 10m SAR Standard)
     
-    // 1. Calculate the integer bounds for the grid
     final int startX = (event.minLng / gridSize).floor();
     final int endX = (event.maxLng / gridSize).floor();
     final int startY = (event.minLat / gridSize).floor();
     final int endY = (event.maxLat / gridSize).floor();
 
-    // 2. Iterate through integers to avoid floating point drift
     for (int x = startX; x <= endX; x++) {
       for (int y = startY; y <= endY; y++) {
+        // MERGE LOGIC: Check if this cell already exists
+        final existing = await isarRepository.findCell(x, y);
+        if (existing != null) continue; // Skip duplicates
+
         final double minX = x * gridSize;
         final double minY = y * gridSize;
         final double maxX = (x + 1) * gridSize;
@@ -60,7 +62,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
           ..y = y
           ..state = "AZ"
           ..county = "Yavapai"
-          ..coverage = 0.0 // Initially unsearched (Grey)
+          ..coverage = 0.0 
           ..lastCleared = DateTime.now()
           ..geoJson = '{"type": "Polygon", "coordinates": [[['
               '${minX.toStringAsFixed(6)}, ${minY.toStringAsFixed(6)}], ['

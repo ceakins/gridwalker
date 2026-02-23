@@ -18,12 +18,16 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   MapLibreMapController? mapController;
   Circle? _userCircle;
+  Circle? _firstPointCircle;
   bool _isGridSourceAdded = false;
   bool _isSelectionSourceAdded = false;
   
   bool _isDrawing = false;
   LatLng? _dragStart;
   LatLng? _dragEnd;
+
+  bool _hasAutoCentered = false;
+  bool _is3D = false;
 
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
@@ -57,6 +61,19 @@ class _MapPageState extends State<MapPage> {
       ));
       _isSelectionSourceAdded = true;
     }
+  }
+
+  void _toggle3D() {
+    setState(() {
+      _is3D = !_is3D;
+      mapController?.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: mapController!.cameraPosition!.target,
+          tilt: _is3D ? 60.0 : 0.0, 
+          zoom: mapController!.cameraPosition!.zoom,
+        ),
+      ));
+    });
   }
 
   void _updateSelectionPreview() async {
@@ -106,7 +123,10 @@ class _MapPageState extends State<MapPage> {
             previous.isTracking != current.isTracking || 
             previous.currentPosition != current.currentPosition ||
             previous.gridCells.length != current.gridCells.length ||
-            current.errorMessage != null,
+            (previous.gridCells.isNotEmpty && 
+             current.gridCells.isNotEmpty && 
+             previous.gridCells.where((c) => c.coverage >= 1.0).length != 
+             current.gridCells.where((c) => c.coverage >= 1.0).length),
         listener: (context, state) {
           if (state.errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -114,9 +134,13 @@ class _MapPageState extends State<MapPage> {
             );
           }
 
-          // Auto-recenter when tracking starts
-          if (state.isTracking && state.currentPosition != null) {
-             mapController?.animateCamera(
+          if (!state.isTracking) {
+            _hasAutoCentered = false;
+          }
+
+          if (state.isTracking && !_hasAutoCentered && state.currentPosition != null) {
+            _hasAutoCentered = true;
+            mapController?.animateCamera(
               CameraUpdate.newLatLng(
                 LatLng(state.currentPosition!.latitude, state.currentPosition!.longitude),
               ),
@@ -157,7 +181,6 @@ class _MapPageState extends State<MapPage> {
             final minLng = min(_dragStart!.longitude, _dragEnd!.longitude);
             final maxLng = max(_dragStart!.longitude, _dragEnd!.longitude);
 
-            // Send a single event for the final bounds
             context.read<AppBloc>().add(CreateSearchZone(
               minLat: minLat, 
               maxLat: maxLat, 
@@ -179,7 +202,7 @@ class _MapPageState extends State<MapPage> {
             styleString: "https://tiles.openfreemap.org/styles/liberty",
             myLocationEnabled: false, 
             trackCameraPosition: true,
-            scrollGesturesEnabled: !_isDrawing, // Disable pan while drawing
+            scrollGesturesEnabled: !_isDrawing, 
           ),
         ),
       ),
@@ -187,6 +210,14 @@ class _MapPageState extends State<MapPage> {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          FloatingActionButton(
+            heroTag: 'toggle_3d',
+            mini: true,
+            backgroundColor: _is3D ? Colors.blue : Colors.white,
+            onPressed: _toggle3D,
+            child: Icon(Icons.terrain, color: _is3D ? Colors.white : Colors.blue),
+          ),
+          const SizedBox(height: 8),
           FloatingActionButton(
             heroTag: 'add_zone',
             mini: true,
