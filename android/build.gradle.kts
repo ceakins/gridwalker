@@ -22,7 +22,7 @@ subprojects {
                 if (android.namespace == null) {
                     android.namespace = "io.github.ceakins.gridwalker.${project.name.replace("-", "_")}"
                 }
-                android.compileSdkVersion(35)
+                android.compileSdkVersion(36)
             }
         }
     }
