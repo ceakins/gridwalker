@@ -18,7 +18,6 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   MapLibreMapController? mapController;
   Circle? _userCircle;
-  Circle? _firstPointCircle;
   bool _isGridSourceAdded = false;
   bool _isSelectionSourceAdded = false;
   
@@ -28,38 +27,65 @@ class _MapPageState extends State<MapPage> {
 
   bool _hasAutoCentered = false;
   bool _is3D = false;
+  bool _isSatellite = false;
+
+  final String _vectorStyle = "https://tiles.openfreemap.org/styles/liberty";
+  
+  // High-reliability Satellite Style JSON
+  late final String _satelliteStyle = jsonEncode({
+    "version": 8,
+    "sources": {
+      "satellite-tiles": {
+        "type": "raster",
+        "tiles": ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+        "tileSize": 256
+      }
+    },
+    "layers": [{"id": "satellite-layer", "type": "raster", "source": "satellite-tiles"}]
+  });
 
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
   }
 
   void _onStyleLoaded() async {
-    _setupGridLayers();
+    _userCircle = null; 
+    _isGridSourceAdded = false;
+    _isSelectionSourceAdded = false;
+    await _setupGridLayers();
+    
+    if (mounted) {
+      final state = context.read<AppBloc>().state;
+      _updateUserMarker(state);
+      _updateGridMap(state);
+    }
   }
 
   Future<void> _setupGridLayers() async {
     if (mapController == null) return;
 
-    // 1. Grid Source & Layer (The actual search blocks)
     if (!_isGridSourceAdded) {
-      await mapController?.addSource("grid-source", const GeojsonSourceProperties(data: {"type": "FeatureCollection", "features": []}));
-      await mapController?.addFillLayer("grid-source", "grid-layer", const FillLayerProperties(
-        fillColor: ["get", "color"],
-        fillOpacity: 0.5,
-        fillOutlineColor: "#ffffff",
-      ));
-      _isGridSourceAdded = true;
+      try {
+        await mapController?.addSource("grid-source", const GeojsonSourceProperties(data: {"type": "FeatureCollection", "features": []}));
+        await mapController?.addFillLayer("grid-source", "grid-layer", const FillLayerProperties(
+          fillColor: ["get", "color"],
+          fillOpacity: 0.5,
+          fillOutlineColor: "#ffffff",
+        ));
+        _isGridSourceAdded = true;
+      } catch (e) { debugPrint("Grid source error: $e"); }
     }
 
-    // 2. Selection Source & Layer (The preview box during drag)
     if (!_isSelectionSourceAdded) {
-      await mapController?.addSource("selection-source", const GeojsonSourceProperties(data: {"type": "FeatureCollection", "features": []}));
-      await mapController?.addFillLayer("selection-source", "selection-layer", const FillLayerProperties(
-        fillColor: "#ff9800",
-        fillOpacity: 0.3,
-        fillOutlineColor: "#ff9800",
-      ));
-      _isSelectionSourceAdded = true;
+      try {
+        await mapController?.addSource("selection-source", const GeojsonSourceProperties(data: {"type": "FeatureCollection", "features": []}));
+        await mapController?.addFillLayer("selection-source", "selection-layer", const FillLayerProperties(
+          fillColor: "#ff9800",
+          fillOpacity: 0.3,
+          fillOutlineColor: "#ff9800",
+        ));
+        _isSelectionSourceAdded = true;
+      } catch (e) { debugPrint("Selection source error: $e"); }
     }
   }
 
@@ -76,8 +102,14 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
+  // Throttled update to prevent buffer overflow (ImageReader error)
+  DateTime _lastPreviewUpdate = DateTime.now();
   void _updateSelectionPreview() async {
-    if (mapController == null || _dragStart == null || _dragEnd == null) return;
+    if (mapController == null || _dragStart == null || _dragEnd == null || !_isSelectionSourceAdded) return;
+    
+    // Only update preview every 50ms to keep buffers happy
+    if (DateTime.now().difference(_lastPreviewUpdate).inMilliseconds < 50) return;
+    _lastPreviewUpdate = DateTime.now();
 
     final minLat = min(_dragStart!.latitude, _dragEnd!.latitude);
     final maxLat = max(_dragStart!.latitude, _dragEnd!.latitude);
@@ -95,11 +127,17 @@ class _MapPageState extends State<MapPage> {
       }]
     };
 
-    await mapController?.setGeoJsonSource("selection-source", geoJson);
+    try {
+      await mapController?.setGeoJsonSource("selection-source", geoJson);
+    } catch (e) { debugPrint("Preview update failed: $e"); }
   }
 
   void _clearSelectionPreview() async {
-    await mapController?.setGeoJsonSource("selection-source", {"type": "FeatureCollection", "features": []});
+    if (_isSelectionSourceAdded) {
+      try {
+        await mapController?.setGeoJsonSource("selection-source", {"type": "FeatureCollection", "features": []});
+      } catch (e) { _isSelectionSourceAdded = false; }
+    }
   }
 
   @override
@@ -128,25 +166,11 @@ class _MapPageState extends State<MapPage> {
              previous.gridCells.where((c) => c.coverage >= 1.0).length != 
              current.gridCells.where((c) => c.coverage >= 1.0).length),
         listener: (context, state) {
-          if (state.errorMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.errorMessage!)),
-            );
-          }
-
-          if (!state.isTracking) {
-            _hasAutoCentered = false;
-          }
-
+          if (!state.isTracking) { _hasAutoCentered = false; }
           if (state.isTracking && !_hasAutoCentered && state.currentPosition != null) {
             _hasAutoCentered = true;
-            mapController?.animateCamera(
-              CameraUpdate.newLatLng(
-                LatLng(state.currentPosition!.latitude, state.currentPosition!.longitude),
-              ),
-            );
+            mapController?.animateCamera(CameraUpdate.newLatLng(LatLng(state.currentPosition!.latitude, state.currentPosition!.longitude)));
           }
-
           _updateUserMarker(state);
           _updateGridMap(state);
         },
@@ -154,10 +178,7 @@ class _MapPageState extends State<MapPage> {
           onLongPressStart: (details) async {
             if (!_isDrawing) return;
             final ratio = MediaQuery.of(context).devicePixelRatio;
-            final latLng = await mapController?.toLatLng(Point(
-              details.localPosition.dx * ratio,
-              details.localPosition.dy * ratio,
-            ));
+            final latLng = await mapController?.toLatLng(Point(details.localPosition.dx * ratio, details.localPosition.dy * ratio));
             setState(() {
               _dragStart = latLng;
               _dragEnd = latLng;
@@ -166,28 +187,17 @@ class _MapPageState extends State<MapPage> {
           onLongPressMoveUpdate: (details) async {
             if (!_isDrawing || _dragStart == null) return;
             final ratio = MediaQuery.of(context).devicePixelRatio;
-            final latLng = await mapController?.toLatLng(Point(
-              details.localPosition.dx * ratio,
-              details.localPosition.dy * ratio,
-            ));
+            final latLng = await mapController?.toLatLng(Point(details.localPosition.dx * ratio, details.localPosition.dy * ratio));
             setState(() => _dragEnd = latLng);
             _updateSelectionPreview();
           },
           onLongPressEnd: (details) async {
             if (!_isDrawing || _dragStart == null || _dragEnd == null) return;
-            
             final minLat = min(_dragStart!.latitude, _dragEnd!.latitude);
             final maxLat = max(_dragStart!.latitude, _dragEnd!.latitude);
             final minLng = min(_dragStart!.longitude, _dragEnd!.longitude);
             final maxLng = max(_dragStart!.longitude, _dragEnd!.longitude);
-
-            context.read<AppBloc>().add(CreateSearchZone(
-              minLat: minLat, 
-              maxLat: maxLat, 
-              minLng: minLng, 
-              maxLng: maxLng
-            ));
-            
+            context.read<AppBloc>().add(CreateSearchZone(minLat: minLat, maxLat: maxLat, minLng: minLng, maxLng: maxLng));
             _clearSelectionPreview();
             setState(() {
               _isDrawing = false;
@@ -199,7 +209,7 @@ class _MapPageState extends State<MapPage> {
             onMapCreated: _onMapCreated,
             onStyleLoadedCallback: _onStyleLoaded,
             initialCameraPosition: const CameraPosition(target: LatLng(34.5400, -112.4685), zoom: 14.0),
-            styleString: "https://tiles.openfreemap.org/styles/liberty",
+            styleString: _isSatellite ? _satelliteStyle : _vectorStyle,
             myLocationEnabled: false, 
             trackCameraPosition: true,
             scrollGesturesEnabled: !_isDrawing, 
@@ -210,6 +220,14 @@ class _MapPageState extends State<MapPage> {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          FloatingActionButton(
+            heroTag: 'toggle_satellite',
+            mini: true,
+            backgroundColor: _isSatellite ? Colors.green : Colors.white,
+            onPressed: () => setState(() => _isSatellite = !_isSatellite),
+            child: Icon(Icons.map, color: _isSatellite ? Colors.white : Colors.green),
+          ),
+          const SizedBox(height: 8),
           FloatingActionButton(
             heroTag: 'toggle_3d',
             mini: true,
@@ -297,7 +315,7 @@ class _MapPageState extends State<MapPage> {
     if (_userCircle == null) {
       _userCircle = await mapController?.addCircle(CircleOptions(geometry: pos, circleColor: "#FF0000", circleRadius: 10.0, circleStrokeColor: "#FFFFFF", circleStrokeWidth: 2.0));
     } else {
-      await mapController?.updateCircle(_userCircle!, CircleOptions(geometry: pos));
+      try { await mapController?.updateCircle(_userCircle!, CircleOptions(geometry: pos)); } catch (e) { _userCircle = null; }
     }
   }
 
@@ -308,6 +326,6 @@ class _MapPageState extends State<MapPage> {
       "geometry": jsonDecode(cell.geoJson),
       "properties": {"color": cell.coverage >= 1.0 ? "#3bb2d0" : "#555555"}
     }).toList();
-    await mapController?.setGeoJsonSource("grid-source", {"type": "FeatureCollection", "features": features});
+    try { await mapController?.setGeoJsonSource("grid-source", {"type": "FeatureCollection", "features": features}); } catch (e) { _isGridSourceAdded = false; }
   }
 }
