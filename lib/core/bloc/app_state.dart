@@ -9,6 +9,8 @@ class AppState extends Equatable {
   final String? errorMessage;
   final bool isTracking;
   final bool isSyncing;
+  final bool isSatellite;
+  final bool is3D;
   final Position? currentPosition;
   final List<GridCell> gridCells;
 
@@ -17,6 +19,8 @@ class AppState extends Equatable {
     this.errorMessage,
     this.isTracking = false,
     this.isSyncing = false,
+    this.isSatellite = false,
+    this.is3D = false,
     this.currentPosition,
     this.gridCells = const [],
   });
@@ -26,6 +30,8 @@ class AppState extends Equatable {
     String? errorMessage,
     bool? isTracking,
     bool? isSyncing,
+    bool? isSatellite,
+    bool? is3D,
     Position? currentPosition,
     List<GridCell>? gridCells,
   }) {
@@ -34,11 +40,13 @@ class AppState extends Equatable {
       errorMessage: errorMessage,
       isTracking: isTracking ?? this.isTracking,
       isSyncing: isSyncing ?? this.isSyncing,
+      isSatellite: isSatellite ?? this.isSatellite,
+      is3D: is3D ?? this.is3D,
       currentPosition: currentPosition ?? this.currentPosition,
       gridCells: gridCells ?? this.gridCells,
     );
   }
 
   @override
-  List<Object?> get props => [status, errorMessage, isTracking, isSyncing, currentPosition, gridCells];
+  List<Object?> get props => [status, errorMessage, isTracking, isSyncing, isSatellite, is3D, currentPosition, gridCells];
 }

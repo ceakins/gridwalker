@@ -25,6 +25,10 @@ class StopTracking extends AppEvent {}
 
 class ClearGrid extends AppEvent {}
 
+class ToggleSatellite extends AppEvent {}
+
+class Toggle3D extends AppEvent {}
+
 class CreateSearchZone extends AppEvent {
   final double minLat;
   final double maxLat;

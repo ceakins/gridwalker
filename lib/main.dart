@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:github/github.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/bloc/app_bloc.dart';
 import 'core/bloc/app_event.dart';
 import 'data/repositories/isar_repository.dart';
+import 'data/repositories/settings_repository.dart';
 import 'features/tracking/tracking_service.dart';
 import 'features/sync/github_sync_service.dart';
 import 'features/map/pages/map_page.dart';
@@ -13,11 +15,13 @@ Future<void> main() async {
 
   // 1. Initialize Core Services
   final isarRepository = IsarRepository();
-  await isarRepository.init(); // Initialize Isar before app starts
+  await isarRepository.init();
+
+  final prefs = await SharedPreferences.getInstance();
+  final settingsRepository = SettingsRepository(prefs);
 
   final trackingService = TrackingService(isarRepository);
   
-  // NOTE: In production, these should be secure storage or user input
   final github = GitHub(auth: Authentication.anonymous()); 
   final syncService = GitHubSyncService(
     github: github, 
@@ -27,6 +31,7 @@ Future<void> main() async {
 
   runApp(MyApp(
     isarRepository: isarRepository,
+    settingsRepository: settingsRepository,
     trackingService: trackingService,
     syncService: syncService,
   ));
@@ -34,12 +39,14 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   final IsarRepository isarRepository;
+  final SettingsRepository settingsRepository;
   final TrackingService trackingService;
   final GitHubSyncService syncService;
 
   const MyApp({
     super.key,
     required this.isarRepository,
+    required this.settingsRepository,
     required this.trackingService,
     required this.syncService,
   });
@@ -49,12 +56,14 @@ class MyApp extends StatelessWidget {
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider.value(value: isarRepository),
+        RepositoryProvider.value(value: settingsRepository),
         RepositoryProvider.value(value: trackingService),
         RepositoryProvider.value(value: syncService),
       ],
       child: BlocProvider(
         create: (context) => AppBloc(
           isarRepository: isarRepository,
+          settingsRepository: settingsRepository,
           trackingService: trackingService,
           syncService: syncService,
         )..add(AppStarted()),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/local/grid_cell.dart';
 import '../../data/repositories/isar_repository.dart';
+import '../../data/repositories/settings_repository.dart';
 import '../../features/tracking/tracking_service.dart';
 import '../../features/sync/github_sync_service.dart';
 import 'app_event.dart';
@@ -9,6 +10,7 @@ import 'app_state.dart';
 
 class AppBloc extends Bloc<AppEvent, AppState> {
   final IsarRepository isarRepository;
+  final SettingsRepository settingsRepository;
   final TrackingService trackingService;
   final GitHubSyncService syncService;
 
@@ -17,13 +19,19 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
   AppBloc({
     required this.isarRepository,
+    required this.settingsRepository,
     required this.trackingService,
     required this.syncService,
-  }) : super(const AppState()) {
+  }) : super(AppState(
+          isSatellite: settingsRepository.isSatellite,
+          is3D: settingsRepository.is3D,
+        )) {
     on<AppStarted>(_onAppStarted);
     on<StartTracking>(_onStartTracking);
     on<StopTracking>(_onStopTracking);
     on<ClearGrid>(_onClearGrid);
+    on<ToggleSatellite>(_onToggleSatellite);
+    on<Toggle3D>(_onToggle3D);
     on<CreateSearchZone>(_onCreateSearchZone);
     on<PositionUpdated>(_onPositionUpdated);
     on<GridUpdated>(_onGridUpdated);
@@ -33,14 +41,25 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     _gridSub = trackingService.gridStream.listen((g) => add(GridUpdated(g)));
   }
 
+  Future<void> _onToggleSatellite(ToggleSatellite event, Emitter<AppState> emit) async {
+    final newValue = !state.isSatellite;
+    await settingsRepository.setSatellite(newValue);
+    emit(state.copyWith(isSatellite: newValue));
+  }
+
+  Future<void> _onToggle3D(Toggle3D event, Emitter<AppState> emit) async {
+    final newValue = !state.is3D;
+    await settingsRepository.set3D(newValue);
+    emit(state.copyWith(is3D: newValue));
+  }
+
   Future<void> _onClearGrid(ClearGrid event, Emitter<AppState> emit) async {
     await isarRepository.clearAllData();
     emit(state.copyWith(gridCells: []));
   }
 
   Future<void> _onCreateSearchZone(CreateSearchZone event, Emitter<AppState> emit) async {
-    const double gridSize = 0.0001; // ~11m (The 10m SAR Standard)
-    
+    const double gridSize = 0.0001; 
     final int startX = (event.minLng / gridSize).floor();
     final int endX = (event.maxLng / gridSize).floor();
     final int startY = (event.minLat / gridSize).floor();
@@ -48,9 +67,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
     for (int x = startX; x <= endX; x++) {
       for (int y = startY; y <= endY; y++) {
-        // MERGE LOGIC: Check if this cell already exists
         final existing = await isarRepository.findCell(x, y);
-        if (existing != null) continue; // Skip duplicates
+        if (existing != null) continue;
 
         final double minX = x * gridSize;
         final double minY = y * gridSize;
@@ -80,7 +98,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   }
 
   Future<void> _onAppStarted(AppStarted event, Emitter<AppState> emit) async {
-    emit(state.copyWith(status: AppStatus.ready));
+    final allCells = await isarRepository.getAllGridCells();
+    emit(state.copyWith(status: AppStatus.ready, gridCells: allCells));
   }
 
   Future<void> _onStartTracking(StartTracking event, Emitter<AppState> emit) async {
