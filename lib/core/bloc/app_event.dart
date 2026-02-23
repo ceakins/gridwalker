@@ -29,6 +29,10 @@ class ToggleSatellite extends AppEvent {}
 
 class Toggle3D extends AppEvent {}
 
+class ExportGrid extends AppEvent {}
+
+class ImportGrid extends AppEvent {}
+
 class CreateSearchZone extends AppEvent {
   final double minLat;
   final double maxLat;

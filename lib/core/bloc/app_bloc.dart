@@ -1,5 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../data/local/grid_cell.dart';
 import '../../data/repositories/isar_repository.dart';
 import '../../data/repositories/settings_repository.dart';
@@ -32,6 +37,8 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<ClearGrid>(_onClearGrid);
     on<ToggleSatellite>(_onToggleSatellite);
     on<Toggle3D>(_onToggle3D);
+    on<ExportGrid>(_onExportGrid);
+    on<ImportGrid>(_onImportGrid);
     on<CreateSearchZone>(_onCreateSearchZone);
     on<PositionUpdated>(_onPositionUpdated);
     on<GridUpdated>(_onGridUpdated);
@@ -39,6 +46,62 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
     _posSub = trackingService.positionStream.listen((p) => add(PositionUpdated(p)));
     _gridSub = trackingService.gridStream.listen((g) => add(GridUpdated(g)));
+  }
+
+  Future<void> _onExportGrid(ExportGrid event, Emitter<AppState> emit) async {
+    try {
+      final cells = await isarRepository.getAllGridCells();
+      final List<Map<String, dynamic>> data = cells.map((c) => {
+        'x': c.x,
+        'y': c.y,
+        'state': c.state,
+        'county': c.county,
+        'coverage': c.coverage,
+        'geoJson': c.geoJson,
+      }).toList();
+
+      final jsonStr = jsonEncode(data);
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/gridwalker_export.json');
+      await file.writeAsString(jsonStr);
+
+      await Share.shareXFiles([XFile(file.path)], text: 'GridWalker Search Grid Export');
+    } catch (e) {
+      emit(state.copyWith(errorMessage: 'Export failed: $e'));
+    }
+  }
+
+  Future<void> _onImportGrid(ImportGrid event, Emitter<AppState> emit) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final jsonStr = await file.readAsString();
+        final List<dynamic> data = jsonDecode(jsonStr);
+
+        for (var item in data) {
+          final cell = GridCell()
+            ..x = item['x']
+            ..y = item['y']
+            ..state = item['state']
+            ..county = item['county']
+            ..coverage = item['coverage']
+            ..lastCleared = DateTime.now()
+            ..geoJson = item['geoJson'];
+          
+          await isarRepository.updateGridCell(cell);
+        }
+
+        final allCells = await isarRepository.getAllGridCells();
+        emit(state.copyWith(gridCells: allCells));
+      }
+    } catch (e) {
+      emit(state.copyWith(errorMessage: 'Import failed: $e'));
+    }
   }
 
   Future<void> _onToggleSatellite(ToggleSatellite event, Emitter<AppState> emit) async {
