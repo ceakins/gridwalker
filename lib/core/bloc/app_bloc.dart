@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../data/repositories/isar_repository.dart';
 import '../../features/tracking/tracking_service.dart';
@@ -10,6 +11,9 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   final TrackingService trackingService;
   final GitHubSyncService syncService;
 
+  StreamSubscription? _posSub;
+  StreamSubscription? _gridSub;
+
   AppBloc({
     required this.isarRepository,
     required this.trackingService,
@@ -18,7 +22,13 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<AppStarted>(_onAppStarted);
     on<StartTracking>(_onStartTracking);
     on<StopTracking>(_onStopTracking);
+    on<PositionUpdated>(_onPositionUpdated);
+    on<GridUpdated>(_onGridUpdated);
     on<SyncRequested>(_onSyncRequested);
+
+    // Listen to real-time streams
+    _posSub = trackingService.positionStream.listen((p) => add(PositionUpdated(p)));
+    _gridSub = trackingService.gridStream.listen((g) => add(GridUpdated(g)));
   }
 
   Future<void> _onAppStarted(AppStarted event, Emitter<AppState> emit) async {
@@ -45,6 +55,14 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(state.copyWith(isTracking: false));
   }
 
+  void _onPositionUpdated(PositionUpdated event, Emitter<AppState> emit) {
+    emit(state.copyWith(currentPosition: event.position));
+  }
+
+  void _onGridUpdated(GridUpdated event, Emitter<AppState> emit) {
+    emit(state.copyWith(gridCells: event.cells));
+  }
+
   Future<void> _onSyncRequested(SyncRequested event, Emitter<AppState> emit) async {
     emit(state.copyWith(isSyncing: true));
     try {
@@ -54,13 +72,16 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         county: event.county,
         caseId: event.caseId,
       );
-      // Simulate successful sync
       emit(state.copyWith(isSyncing: false));
     } catch (e) {
-      emit(state.copyWith(
-        isSyncing: false,
-        errorMessage: 'Sync failed: $e',
-      ));
+      emit(state.copyWith(isSyncing: false, errorMessage: 'Sync failed: $e'));
     }
+  }
+
+  @override
+  Future<void> close() {
+    _posSub?.cancel();
+    _gridSub?.cancel();
+    return super.close();
   }
 }

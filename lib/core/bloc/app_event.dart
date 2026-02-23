@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import 'package:geolocator/geolocator.dart';
+import '../../data/local/grid_cell.dart';
 
 abstract class AppEvent extends Equatable {
   const AppEvent();
@@ -20,6 +22,22 @@ class StartTracking extends AppEvent {
 }
 
 class StopTracking extends AppEvent {}
+
+class PositionUpdated extends AppEvent {
+  final Position position;
+  const PositionUpdated(this.position);
+
+  @override
+  List<Object?> get props => [position];
+}
+
+class GridUpdated extends AppEvent {
+  final List<GridCell> cells;
+  const GridUpdated(this.cells);
+
+  @override
+  List<Object?> get props => [cells];
+}
 
 class SyncRequested extends AppEvent {
   final String country;

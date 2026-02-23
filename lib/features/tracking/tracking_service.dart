@@ -8,65 +8,68 @@ class TrackingService {
   StreamSubscription<Position>? _positionSubscription;
   bool _isTracking = false;
 
+  final _positionController = StreamController<Position>.broadcast();
+  final _gridController = StreamController<List<GridCell>>.broadcast();
+
+  Stream<Position> get positionStream => _positionController.stream;
+  Stream<List<GridCell>> get gridStream => _gridController.stream;
+
   TrackingService(this._isarRepository);
 
-  /// Start background GPS tracking and update grid cell POD (Probability of Detection)
   Future<void> startTracking({
     required String state,
     required String county,
   }) async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return Future.error('Location services are disabled.');
 
-    permission = await Geolocator.checkPermission();
+    LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error('Location permissions are permanently denied.');
+      if (permission == LocationPermission.denied) return Future.error('Location permissions denied');
     }
 
     _isTracking = true;
     _positionSubscription = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 10, // Update every 10 meters
+        distanceFilter: 5, // Update every 5 meters
       ),
     ).listen((Position position) {
+      _positionController.add(position);
       _processPosition(position, state, county);
     });
   }
 
   void _processPosition(Position position, String state, String county) async {
-    // 1. Calculate the grid cell coordinates (x, y) based on a simple lat/lng to grid logic
-    // (A more complex projection or H3 indexing would be used for production)
-    final int x = (position.longitude * 100).floor();
-    final int y = (position.latitude * 100).floor();
+    // Lat/Lng to Grid indexing (Approx. 110m cells)
+    final int x = (position.longitude * 1000).floor();
+    final int y = (position.latitude * 1000).floor();
 
-    // 2. Fetch or update the cell in Isar
-    // For now, let's create a placeholder cell if not exists
     final cell = GridCell()
       ..x = x
       ..y = y
       ..state = state
       ..county = county
-      ..coverage = 1.0 // Fully cleared cell
+      ..coverage = 1.0
       ..lastCleared = DateTime.now()
-      ..geoJson = '{"type": "Polygon", "coordinates": []}'; // Placeholder
+      ..geoJson = '{"type": "Polygon", "coordinates": [[[${x/1000}, ${y/1000}], [${(x+1)/1000}, ${y/1000}], [${(x+1)/1000}, ${(y+1)/1000}], [${x/1000}, ${(y+1)/1000}], [${x/1000}, ${y/1000}]]]}';
 
     await _isarRepository.updateGridCell(cell);
+    
+    // Refresh the grid state (In production, query only the bounds)
+    final cells = await _isarRepository.getCellsInBounds(0,0,0,0);
+    _gridController.add(cells);
   }
 
   void stopTracking() {
     _positionSubscription?.cancel();
     _isTracking = false;
+  }
+
+  void dispose() {
+    _positionController.close();
+    _gridController.close();
   }
 
   bool get isTracking => _isTracking;

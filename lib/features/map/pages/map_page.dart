@@ -15,9 +15,39 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   MapLibreMapController? mapController;
+  Circle? _userCircle;
 
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
+  }
+
+  void _onStyleLoaded() {
+    // Circle rendering doesn't require image loading
+  }
+
+  void _updateUserLocation(AppState state) async {
+    if (state.currentPosition == null || mapController == null) return;
+
+    final pos = LatLng(state.currentPosition!.latitude, state.currentPosition!.longitude);
+
+    if (_userCircle == null) {
+      _userCircle = await mapController?.addCircle(
+        CircleOptions(
+          geometry: pos,
+          circleColor: "#FF0000", // Bright Red
+          circleRadius: 10.0,
+          circleStrokeColor: "#FFFFFF", // White border for contrast
+          circleStrokeWidth: 2.0,
+        ),
+      );
+    } else {
+      await mapController?.updateCircle(
+        _userCircle!,
+        CircleOptions(
+          geometry: pos,
+        ),
+      );
+    }
   }
 
   @override
@@ -43,34 +73,48 @@ class _MapPageState extends State<MapPage> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          MapLibreMap(
-            onMapCreated: _onMapCreated,
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(34.5400, -112.4685),
-              zoom: 12.0,
-            ),
-            styleString: MapLibreStyles.demo,
-            myLocationEnabled: true,
-            trackCameraPosition: true,
+      body: BlocListener<AppBloc, AppState>(
+        listener: (context, state) {
+          if (state.errorMessage != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.errorMessage!)),
+            );
+          }
+          _updateUserLocation(state);
+        },
+        child: MapLibreMap(
+          onMapCreated: _onMapCreated,
+          onStyleLoadedCallback: _onStyleLoaded,
+          initialCameraPosition: const CameraPosition(
+            target: LatLng(34.5400, -112.4685),
+            zoom: 14.0,
           ),
-          BlocListener<AppBloc, AppState>(
-            listener: (context, state) {
-              if (state.errorMessage != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.errorMessage!)),
-                );
-              }
-            },
-            child: const SizedBox.shrink(),
-          ),
-        ],
+          styleString: "https://tiles.openfreemap.org/styles/bright",
+          myLocationEnabled: false, 
+          trackCameraPosition: true,
+        ),
       ),
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          FloatingActionButton(
+            heroTag: 'recenter',
+            mini: true,
+            backgroundColor: Colors.white,
+            onPressed: () {
+              final state = context.read<AppBloc>().state;
+              if (state.currentPosition != null) {
+                mapController?.animateCamera(
+                  CameraUpdate.newLatLng(
+                    LatLng(state.currentPosition!.latitude, state.currentPosition!.longitude),
+                  ),
+                );
+              }
+            },
+            child: const Icon(Icons.my_location, color: Colors.blue),
+          ),
+          const SizedBox(height: 8),
           BlocBuilder<AppBloc, AppState>(
             builder: (context, state) {
               return FloatingActionButton(
