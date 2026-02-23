@@ -1,4 +1,4 @@
-package org.gridwalker.gridwalker
+package io.github.ceakins.gridwalker
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -13,12 +13,19 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
 
-// 1. Force SDK and Dependency versions BEFORE evaluation
+// 1. Configure all subprojects to have a namespace and compatible SDK
 subprojects {
     afterEvaluate {
         if (project.hasProperty("android")) {
-            val android = project.extensions.getByName("android") as com.android.build.gradle.BaseExtension
-            android.compileSdkVersion(35)
+            val android = project.extensions.getByName("android")
+            if (android is com.android.build.gradle.BaseExtension) {
+                // Force a namespace if one isn't provided (Fixes isar_flutter_libs)
+                if (android.namespace == null) {
+                    val groupName = "io.github.ceakins.gridwalker.${project.name.replace("-", "_")}"
+                    android.namespace = groupName
+                }
+                android.compileSdkVersion(35)
+            }
         }
     }
 
@@ -31,7 +38,7 @@ subprojects {
     }
 }
 
-// 2. Evaluation depends on app must come AFTER configuration hooks
+// 2. Critical: Evaluation depends on app must come AFTER configuration hooks
 subprojects {
     project.evaluationDependsOn(":app")
 }
