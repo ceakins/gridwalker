@@ -45,8 +45,8 @@ android {
                 signingConfig = signingConfigs.getByName("debug")
             }
             
-            minifyEnabled = false
-            shrinkResources = false
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
