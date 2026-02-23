@@ -59,7 +59,7 @@ class MyApp extends StatelessWidget {
           syncService: syncService,
         )..add(AppStarted()),
         child: MaterialApp(
-          title: 'GridWalker SAR',
+          title: 'GridWalker SR',
           theme: ThemeData(
             primarySwatch: Colors.orange,
             visualDensity: VisualDensity.adaptivePlatformDensity,

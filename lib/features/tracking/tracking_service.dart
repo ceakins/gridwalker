@@ -33,7 +33,7 @@ class TrackingService {
     _positionSubscription = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 5, // Update every 5 meters
+        distanceFilter: 5, 
       ),
     ).listen((Position position) {
       _positionController.add(position);
@@ -42,24 +42,22 @@ class TrackingService {
   }
 
   void _processPosition(Position position, String state, String county) async {
-    // Lat/Lng to Grid indexing (Approx. 110m cells)
-    final int x = (position.longitude * 1000).floor();
-    final int y = (position.latitude * 1000).floor();
+    const double gridSize = 0.00001; 
+    final int x = (position.longitude / gridSize).floor();
+    final int y = (position.latitude / gridSize).floor();
 
-    final cell = GridCell()
-      ..x = x
-      ..y = y
-      ..state = state
-      ..county = county
-      ..coverage = 1.0
-      ..lastCleared = DateTime.now()
-      ..geoJson = '{"type": "Polygon", "coordinates": [[[${x/1000}, ${y/1000}], [${(x+1)/1000}, ${y/1000}], [${(x+1)/1000}, ${(y+1)/1000}], [${x/1000}, ${(y+1)/1000}], [${x/1000}, ${y/1000}]]]}';
+    // Use our new IsarRepository method instead of direct isar access
+    final existingCell = await _isarRepository.findCell(x, y);
 
-    await _isarRepository.updateGridCell(cell);
-    
-    // Refresh the grid state (In production, query only the bounds)
-    final cells = await _isarRepository.getCellsInBounds(0,0,0,0);
-    _gridController.add(cells);
+    if (existingCell != null && existingCell.coverage < 1.0) {
+      existingCell.coverage = 1.0;
+      existingCell.lastCleared = DateTime.now();
+      await _isarRepository.updateGridCell(existingCell);
+      
+      // Refresh the grid state
+      final cells = await _isarRepository.getAllGridCells();
+      _gridController.add(cells);
+    }
   }
 
   void stopTracking() {

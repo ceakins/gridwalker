@@ -6,13 +6,32 @@ import '../local/grid_cell.dart';
 
 class IsarRepository {
   late Isar _isar;
+  Isar get isar => _isar;
 
   Future<void> init() async {
+    if (Isar.getInstance() != null) {
+      _isar = Isar.getInstance()!;
+      return;
+    }
+
     final dir = await getApplicationDocumentsDirectory();
     _isar = await Isar.open(
       [SubjectRecordSchema, GpsTrackSchema, GridCellSchema],
       directory: dir.path,
     );
+  }
+
+  // --- Grid Cells ---
+  Future<List<GridCell>> getAllGridCells() async {
+    return _isar.gridCells.where().findAll();
+  }
+
+  Future<GridCell?> findCell(int x, int y) async {
+    return _isar.gridCells.filter().xEqualTo(x).yEqualTo(y).findFirst();
+  }
+
+  Future<void> updateGridCell(GridCell cell) async {
+    await _isar.writeTxn(() => _isar.gridCells.put(cell));
   }
 
   // --- Subject Records ---
@@ -39,16 +58,6 @@ class IsarRepository {
         .stateEqualTo(state)
         .countyEqualTo(county)
         .findAll();
-  }
-
-  // --- Grid Cells ---
-  Future<void> updateGridCell(GridCell cell) async {
-    await _isar.writeTxn(() => _isar.gridCells.put(cell));
-  }
-
-  Future<List<GridCell>> getCellsInBounds(double minLat, double maxLat, double minLng, double maxLng) {
-    // Spatial queries can be optimized by using a simpler index filter first
-    return _isar.gridCells.where().findAll();
   }
 
   Future<void> clearAllData() async {

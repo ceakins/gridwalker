@@ -25,6 +25,6 @@ void main() {
     ));
 
     // 3. Verify that the app title is present
-    expect(find.text('GridWalker SAR'), findsOneWidget);
+    expect(find.text('GridWalker SR'), findsOneWidget);
   });
 }

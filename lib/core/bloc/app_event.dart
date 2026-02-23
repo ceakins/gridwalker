@@ -23,6 +23,25 @@ class StartTracking extends AppEvent {
 
 class StopTracking extends AppEvent {}
 
+class ClearGrid extends AppEvent {}
+
+class CreateSearchZone extends AppEvent {
+  final double minLat;
+  final double maxLat;
+  final double minLng;
+  final double maxLng;
+
+  const CreateSearchZone({
+    required this.minLat,
+    required this.maxLat,
+    required this.minLng,
+    required this.maxLng,
+  });
+
+  @override
+  List<Object?> get props => [minLat, maxLat, minLng, maxLng];
+}
+
 class PositionUpdated extends AppEvent {
   final Position position;
   const PositionUpdated(this.position);
