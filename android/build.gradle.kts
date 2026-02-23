@@ -13,20 +13,27 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
 
+// 1. Force SDK and Dependency versions BEFORE evaluation
 subprojects {
-    project.evaluationDependsOn(":app")
-}
-
-// Use plugin hooks to configure Android subprojects without using afterEvaluate
-subprojects {
-    plugins.withType<com.android.build.gradle.BasePlugin> {
-        val android = project.extensions.getByType<com.android.build.gradle.BaseExtension>()
-        android.compileSdkVersion(35)
-        
-        if (android.namespace == null) {
-            android.namespace = "org.gridwalker.${project.name.replace("-", "_")}"
+    afterEvaluate {
+        if (project.hasProperty("android")) {
+            val android = project.extensions.getByName("android") as com.android.build.gradle.BaseExtension
+            android.compileSdkVersion(35)
         }
     }
+
+    project.configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "androidx.core" && requested.name == "core") {
+                useVersion("1.13.1")
+            }
+        }
+    }
+}
+
+// 2. Evaluation depends on app must come AFTER configuration hooks
+subprojects {
+    project.evaluationDependsOn(":app")
 }
 
 tasks.register<Delete>("clean") {
