@@ -13,18 +13,31 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
 
-// 1. Configure all subprojects to have a namespace and compatible SDK
 subprojects {
+    // 1. Force Namespace and SDK compatibility
     afterEvaluate {
         if (project.hasProperty("android")) {
             val android = project.extensions.getByName("android")
             if (android is com.android.build.gradle.BaseExtension) {
-                // Force a namespace if one isn't provided (Fixes isar_flutter_libs)
                 if (android.namespace == null) {
-                    val groupName = "io.github.ceakins.gridwalker.${project.name.replace("-", "_")}"
-                    android.namespace = groupName
+                    android.namespace = "io.github.ceakins.gridwalker.${project.name.replace("-", "_")}"
                 }
                 android.compileSdkVersion(35)
+            }
+        }
+    }
+
+    // 2. Patch legacy Manifest files to remove the 'package' attribute (Fixes Isar conflict)
+    project.tasks.withType<com.android.build.gradle.tasks.ProcessLibraryManifest>().configureEach {
+        doFirst {
+            val manifestFile = project.file("src/main/AndroidManifest.xml")
+            if (manifestFile.exists()) {
+                val content = manifestFile.readText()
+                if (content.contains("package=")) {
+                    val updatedContent = content.replace(Regex("package=\"[^\"]*\""), "")
+                    manifestFile.writeText(updatedContent)
+                    println("Pitched legacy manifest for: ${project.name}")
+                }
             }
         }
     }
@@ -38,7 +51,6 @@ subprojects {
     }
 }
 
-// 2. Critical: Evaluation depends on app must come AFTER configuration hooks
 subprojects {
     project.evaluationDependsOn(":app")
 }
