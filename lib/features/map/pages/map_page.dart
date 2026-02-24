@@ -95,7 +95,7 @@ class _MapPageState extends State<MapPage> {
         await mapController?.addSource("marker-source", const GeojsonSourceProperties(data: {"type": "FeatureCollection", "features": []}));
         await mapController?.addCircleLayer("marker-source", "marker-layer", const CircleLayerProperties(
           circleColor: ["get", "color"],
-          circleRadius: 10.0,
+          circleRadius: 12.0, // Larger for easier tapping
           circleStrokeColor: "#000000",
           circleStrokeWidth: 2.0,
         ));
@@ -105,20 +105,43 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _handleGlobalTap(Offset localPosition) async {
-    if (!_isPlacingMarker || mapController == null) return;
+    if (mapController == null) return;
 
     final ratio = MediaQuery.of(context).devicePixelRatio;
-    final latLng = await mapController?.toLatLng(Point(
-      localPosition.dx * ratio,
-      localPosition.dy * ratio,
-    ));
+    final point = Point(localPosition.dx * ratio, localPosition.dy * ratio);
+    
+    // 1. Check if we tapped an existing marker
+    final features = await mapController?.queryRenderedFeatures(point, ["marker-layer"], null);
+    if (features != null && features.isNotEmpty) {
+      final properties = features.first["properties"];
+      _showMarkerInfoDialog(properties["name"], properties["type"]);
+      return;
+    }
 
-    if (latLng != null) {
-      _showMarkerDialog(latLng);
+    // 2. Otherwise, if in placing mode, add a new one
+    if (_isPlacingMarker) {
+      final latLng = await mapController?.toLatLng(point);
+      if (latLng != null) {
+        _showAddMarkerDialog(latLng);
+      }
     }
   }
 
-  Future<void> _showMarkerDialog(LatLng latLng) async {
+  void _showMarkerInfoDialog(String name, String type) {
+    String typeLabel = type == 'clue' ? '🟡 Clue' : (type == 'subject' ? '🟢 Subject' : '📍 POI');
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(typeLabel),
+        content: Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showAddMarkerDialog(LatLng latLng) async {
     final nameController = TextEditingController();
     String type = 'clue';
 
@@ -161,7 +184,7 @@ class _MapPageState extends State<MapPage> {
   DateTime _lastPreviewUpdate = DateTime.now();
   void _updateSelectionPreview() async {
     if (mapController == null || _dragStart == null || _dragEnd == null || !_isSelectionSourceAdded) return;
-    if (DateTime.now().difference(_lastPreviewUpdate).inMilliseconds < 100) return; // Throttled for stability
+    if (DateTime.now().difference(_lastPreviewUpdate).inMilliseconds < 100) return;
     _lastPreviewUpdate = DateTime.now();
     final minLat = min(_dragStart!.latitude, _dragEnd!.latitude);
     final maxLat = max(_dragStart!.latitude, _dragEnd!.latitude);
@@ -217,7 +240,6 @@ class _MapPageState extends State<MapPage> {
           builder: (context, state) {
             return Stack(
               children: [
-                // 1. The Native Map
                 MapLibreMap(
                   onMapCreated: _onMapCreated,
                   onStyleLoadedCallback: _onStyleLoaded,
@@ -228,8 +250,6 @@ class _MapPageState extends State<MapPage> {
                   trackCameraPosition: true,
                   scrollGesturesEnabled: !_isDrawing && !_isPlacingMarker, 
                 ),
-                
-                // 2. The Gesture Capture Layer (Only active when Drawing or Placing Markers)
                 Positioned.fill(
                   child: GestureDetector(
                     behavior: HitTestBehavior.translucent,
@@ -317,7 +337,15 @@ class _MapPageState extends State<MapPage> {
       String color = "#FFFF00"; 
       if (marker.markerType == 'subject') color = "#00FF00"; 
       if (marker.markerType == 'poi') color = "#FFFFFF"; 
-      return {"type": "Feature", "geometry": geo, "properties": {"color": color, "name": marker.name}};
+      return {
+        "type": "Feature", 
+        "geometry": geo, 
+        "properties": {
+          "color": color, 
+          "name": marker.name,
+          "type": marker.markerType,
+        }
+      };
     }).toList();
     try { await mapController?.setGeoJsonSource("marker-source", {"type": "FeatureCollection", "features": features}); } catch (e) { _isMarkerSourceAdded = false; }
   }
