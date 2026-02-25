@@ -7,6 +7,7 @@ import '../../../core/bloc/app_bloc.dart';
 import '../../../core/bloc/app_state.dart';
 import '../../../core/bloc/app_event.dart';
 import '../../sync/pages/sync_dashboard_page.dart';
+import '../../splash/widgets/splash_content.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -204,6 +205,18 @@ class _MapPageState extends State<MapPage> {
         title: const Text('GridWalker SAR'),
         backgroundColor: Colors.orange[800],
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (_) => const Scaffold(
+                  backgroundColor: Color(0xFF1A1A1A),
+                  body: SplashContent(showCloseButton: true),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.sync),
             onPressed: () {
