@@ -3,11 +3,13 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../core/bloc/app_bloc.dart';
 import '../../../core/bloc/app_state.dart';
 import '../../../core/bloc/app_event.dart';
 import '../../sync/pages/sync_dashboard_page.dart';
 import '../../splash/widgets/splash_content.dart';
+import '../../tracking/pages/permission_screen.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -29,6 +31,25 @@ class _MapPageState extends State<MapPage> {
   LatLng? _dragEnd;
 
   bool _hasAutoCentered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkPermissions());
+  }
+
+  Future<void> _checkPermissions() async {
+    final status = await Permission.locationAlways.status;
+    if (!status.isGranted && mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => LocationPermissionScreen(
+            onPermissionGranted: () => Navigator.of(context).pop(),
+          ),
+        ),
+      );
+    }
+  }
 
   final String _vectorStyle = "https://tiles.openfreemap.org/styles/liberty";
   late final String _satelliteStyle = jsonEncode({
