@@ -2,7 +2,7 @@ name: gridwalker
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 0.1.5+5
+version: 0.1.6+6
 
 environment:
   sdk: ^3.8.1
@@ -28,6 +28,7 @@ dependencies:
   file_picker: ^10.3.10
   share_plus: ^12.0.1
   url_launcher: ^6.3.2
+  upgrader: ^11.4.0
 
 dev_dependencies:
   flutter_test:

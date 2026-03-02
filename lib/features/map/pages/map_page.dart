@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:upgrader/upgrader.dart';
 import '../../../core/bloc/app_bloc.dart';
 import '../../../core/bloc/app_state.dart';
 import '../../../core/bloc/app_event.dart';
@@ -230,129 +231,137 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('GridWalker SAR'),
-        backgroundColor: Colors.orange[800],
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (_) => const Scaffold(
-                  backgroundColor: Color(0xFF1A1A1A),
-                  body: SplashContent(showCloseButton: true),
-                ),
+    return UpgradeAlert(
+      showIgnore: false,
+      showLater: true,
+      dialogStyle: UpgradeDialogStyle.material,
+      upgrader: Upgrader(
+        messages: GridWalkerUpgraderMessages(),
+      ),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('GridWalker SAR'),
+          backgroundColor: Colors.orange[800],
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.info_outline),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => const Scaffold(
+                    backgroundColor: Color(0xFF1A1A1A),
+                    body: SplashContent(showCloseButton: true),
+                  ),
+                );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.sync),
+              onPressed: () {
+                final bloc = context.read<AppBloc>();
+                Navigator.of(context).push(MaterialPageRoute(builder: (_) => SyncDashboardPage(isarRepository: bloc.isarRepository, syncService: bloc.syncService)));
+              },
+            ),
+          ],
+        ),
+        body: BlocListener<AppBloc, AppState>(
+          listenWhen: (previous, current) => 
+              previous.isTracking != current.isTracking || 
+              previous.currentPosition != current.currentPosition ||
+              previous.gridCells.length != current.gridCells.length ||
+              previous.markers.length != current.markers.length ||
+              previous.isSatellite != current.isSatellite ||
+              previous.is3D != current.is3D ||
+              (previous.gridCells.isNotEmpty && 
+               current.gridCells.isNotEmpty && 
+               previous.gridCells.where((c) => c.coverage >= 1.0).length != 
+               current.gridCells.where((c) => c.coverage >= 1.0).length),
+          listener: (context, state) {
+            if (!state.isTracking) { _hasAutoCentered = false; }
+            if (state.isTracking && !_hasAutoCentered && state.currentPosition != null) {
+              _hasAutoCentered = true;
+              mapController?.animateCamera(CameraUpdate.newLatLng(LatLng(state.currentPosition!.latitude, state.currentPosition!.longitude)));
+            }
+            _updateUserMarker(state);
+            _updateGridMap(state);
+            _updateMarkers(state);
+          },
+          child: BlocBuilder<AppBloc, AppState>(
+            buildWhen: (previous, current) => previous.isSatellite != current.isSatellite,
+            builder: (context, state) {
+              return Stack(
+                children: [
+                  MapLibreMap(
+                    onMapCreated: _onMapCreated,
+                    onStyleLoadedCallback: _onStyleLoaded,
+                    initialCameraPosition: const CameraPosition(target: LatLng(34.5400, -112.4685), zoom: 14.0),
+                    minMaxZoomPreference: MinMaxZoomPreference(0.0, state.isSatellite ? 18.0 : 22.0),
+                    styleString: state.isSatellite ? _satelliteStyle : _vectorStyle,
+                    myLocationEnabled: false, 
+                    trackCameraPosition: true,
+                    scrollGesturesEnabled: !_isDrawing && !_isPlacingMarker, 
+                  ),
+                  Positioned.fill(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTapUp: (details) => _handleGlobalTap(details.localPosition),
+                      onLongPressStart: (details) async {
+                        if (!_isDrawing) return;
+                        final ratio = MediaQuery.of(context).devicePixelRatio;
+                        final latLng = await mapController?.toLatLng(Point(details.localPosition.dx * ratio, details.localPosition.dy * ratio));
+                        setState(() { _dragStart = latLng; _dragEnd = latLng; });
+                      },
+                      onLongPressMoveUpdate: (details) async {
+                        if (!_isDrawing || _dragStart == null) return;
+                        final ratio = MediaQuery.of(context).devicePixelRatio;
+                        final latLng = await mapController?.toLatLng(Point(details.localPosition.dx * ratio, details.localPosition.dy * ratio));
+                        setState(() => _dragEnd = latLng);
+                        _updateSelectionPreview();
+                      },
+                      onLongPressEnd: (details) async {
+                        if (!_isDrawing || _dragStart == null || _dragEnd == null) return;
+                        final minLat = min(_dragStart!.latitude, _dragEnd!.latitude);
+                        final maxLat = max(_dragStart!.latitude, _dragEnd!.latitude);
+                        final minLng = min(_dragStart!.longitude, _dragEnd!.longitude);
+                        final maxLng = max(_dragStart!.longitude, _dragEnd!.longitude);
+                        context.read<AppBloc>().add(CreateSearchZone(minLat: minLat, maxLat: maxLat, minLng: minLng, maxLng: maxLng));
+                        if (_isSelectionSourceAdded) { try { await mapController?.setGeoJsonSource("selection-source", {"type": "FeatureCollection", "features": []}); } catch (e) {} }
+                        setState(() { _isDrawing = false; _dragStart = null; _dragEnd = null; });
+                      },
+                    ),
+                  ),
+                ],
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.sync),
-            onPressed: () {
-              final bloc = context.read<AppBloc>();
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => SyncDashboardPage(isarRepository: bloc.isarRepository, syncService: bloc.syncService)));
-            },
-          ),
-        ],
-      ),
-      body: BlocListener<AppBloc, AppState>(
-        listenWhen: (previous, current) => 
-            previous.isTracking != current.isTracking || 
-            previous.currentPosition != current.currentPosition ||
-            previous.gridCells.length != current.gridCells.length ||
-            previous.markers.length != current.markers.length ||
-            previous.isSatellite != current.isSatellite ||
-            previous.is3D != current.is3D ||
-            (previous.gridCells.isNotEmpty && 
-             current.gridCells.isNotEmpty && 
-             previous.gridCells.where((c) => c.coverage >= 1.0).length != 
-             current.gridCells.where((c) => c.coverage >= 1.0).length),
-        listener: (context, state) {
-          if (!state.isTracking) { _hasAutoCentered = false; }
-          if (state.isTracking && !_hasAutoCentered && state.currentPosition != null) {
-            _hasAutoCentered = true;
-            mapController?.animateCamera(CameraUpdate.newLatLng(LatLng(state.currentPosition!.latitude, state.currentPosition!.longitude)));
-          }
-          _updateUserMarker(state);
-          _updateGridMap(state);
-          _updateMarkers(state);
-        },
-        child: BlocBuilder<AppBloc, AppState>(
-          buildWhen: (previous, current) => previous.isSatellite != current.isSatellite,
+        ),
+        floatingActionButton: BlocBuilder<AppBloc, AppState>(
           builder: (context, state) {
-            return Stack(
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                MapLibreMap(
-                  onMapCreated: _onMapCreated,
-                  onStyleLoadedCallback: _onStyleLoaded,
-                  initialCameraPosition: const CameraPosition(target: LatLng(34.5400, -112.4685), zoom: 14.0),
-                  minMaxZoomPreference: MinMaxZoomPreference(0.0, state.isSatellite ? 18.0 : 22.0),
-                  styleString: state.isSatellite ? _satelliteStyle : _vectorStyle,
-                  myLocationEnabled: false, 
-                  trackCameraPosition: true,
-                  scrollGesturesEnabled: !_isDrawing && !_isPlacingMarker, 
-                ),
-                Positioned.fill(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onTapUp: (details) => _handleGlobalTap(details.localPosition),
-                    onLongPressStart: (details) async {
-                      if (!_isDrawing) return;
-                      final ratio = MediaQuery.of(context).devicePixelRatio;
-                      final latLng = await mapController?.toLatLng(Point(details.localPosition.dx * ratio, details.localPosition.dy * ratio));
-                      setState(() { _dragStart = latLng; _dragEnd = latLng; });
-                    },
-                    onLongPressMoveUpdate: (details) async {
-                      if (!_isDrawing || _dragStart == null) return;
-                      final ratio = MediaQuery.of(context).devicePixelRatio;
-                      final latLng = await mapController?.toLatLng(Point(details.localPosition.dx * ratio, details.localPosition.dy * ratio));
-                      setState(() => _dragEnd = latLng);
-                      _updateSelectionPreview();
-                    },
-                    onLongPressEnd: (details) async {
-                      if (!_isDrawing || _dragStart == null || _dragEnd == null) return;
-                      final minLat = min(_dragStart!.latitude, _dragEnd!.latitude);
-                      final maxLat = max(_dragStart!.latitude, _dragEnd!.latitude);
-                      final minLng = min(_dragStart!.longitude, _dragEnd!.longitude);
-                      final maxLng = max(_dragStart!.longitude, _dragEnd!.longitude);
-                      context.read<AppBloc>().add(CreateSearchZone(minLat: minLat, maxLat: maxLat, minLng: minLng, maxLng: maxLng));
-                      if (_isSelectionSourceAdded) { try { await mapController?.setGeoJsonSource("selection-source", {"type": "FeatureCollection", "features": []}); } catch (e) {} }
-                      setState(() { _isDrawing = false; _dragStart = null; _dragEnd = null; });
-                    },
-                  ),
-                ),
+                FloatingActionButton(heroTag: 'toggle_satellite', mini: true, backgroundColor: state.isSatellite ? Colors.green : Colors.white, onPressed: () => context.read<AppBloc>().add(ToggleSatellite()), child: Icon(Icons.map, color: state.isSatellite ? Colors.white : Colors.green)),
+                const SizedBox(height: 8),
+                FloatingActionButton(heroTag: 'toggle_3d', mini: true, backgroundColor: state.is3D ? Colors.blue : Colors.white, onPressed: () { context.read<AppBloc>().add(Toggle3D()); mapController?.animateCamera(CameraUpdate.tiltTo(state.is3D ? 0.0 : 60.0)); }, child: Icon(Icons.terrain, color: state.is3D ? Colors.white : Colors.blue)),
+                const SizedBox(height: 8),
+                FloatingActionButton(heroTag: 'toggle_marker_mode', mini: true, backgroundColor: _isPlacingMarker ? Colors.red : Colors.white, onPressed: () => setState(() { _isPlacingMarker = !_isPlacingMarker; _isDrawing = false; }), child: Icon(Icons.location_on, color: _isPlacingMarker ? Colors.white : Colors.red)),
+                const SizedBox(height: 8),
+                FloatingActionButton(heroTag: 'add_zone', mini: true, backgroundColor: _isDrawing ? Colors.orange : Colors.blue[100], onPressed: () { setState(() { _isDrawing = !_isDrawing; _dragStart = null; _dragEnd = null; _isPlacingMarker = false; }); if (_isDrawing) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Long-press and drag on map'))); } }, child: Icon(Icons.add_location_alt, color: _isDrawing ? Colors.white : Colors.blue)),
+                const SizedBox(height: 8),
+                FloatingActionButton(heroTag: 'clear_grid', mini: true, backgroundColor: Colors.red[100], onPressed: () => context.read<AppBloc>().add(ClearGrid()), child: const Icon(Icons.layers_clear, color: Colors.red)),
+                const SizedBox(height: 8),
+                FloatingActionButton(heroTag: 'recenter', mini: true, backgroundColor: Colors.white, onPressed: () { if (state.currentPosition != null) { mapController?.animateCamera(CameraUpdate.newLatLng(LatLng(state.currentPosition!.latitude, state.currentPosition!.longitude))); } }, child: const Icon(Icons.my_location, color: Colors.blue)),
+                const SizedBox(height: 8),
+                FloatingActionButton(heroTag: 'tracking_toggle', backgroundColor: state.isTracking ? Colors.red : Colors.green, onPressed: () { if (state.isTracking) { context.read<AppBloc>().add(StopTracking()); } else { context.read<AppBloc>().add(const StartTracking(state: 'AZ', county: 'Yavapai')); } }, child: Icon(state.isTracking ? Icons.stop : Icons.play_arrow)),
+                const SizedBox(height: 16),
+                FloatingActionButton(heroTag: 'zoom_in', mini: true, onPressed: () => mapController?.animateCamera(CameraUpdate.zoomIn()), child: const Icon(Icons.add)),
+                const SizedBox(height: 8),
+                FloatingActionButton(heroTag: 'zoom_out', mini: true, onPressed: () => mapController?.animateCamera(CameraUpdate.zoomOut()), child: const Icon(Icons.remove)),
               ],
             );
           },
         ),
-      ),
-      floatingActionButton: BlocBuilder<AppBloc, AppState>(
-        builder: (context, state) {
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              FloatingActionButton(heroTag: 'toggle_satellite', mini: true, backgroundColor: state.isSatellite ? Colors.green : Colors.white, onPressed: () => context.read<AppBloc>().add(ToggleSatellite()), child: Icon(Icons.map, color: state.isSatellite ? Colors.white : Colors.green)),
-              const SizedBox(height: 8),
-              FloatingActionButton(heroTag: 'toggle_3d', mini: true, backgroundColor: state.is3D ? Colors.blue : Colors.white, onPressed: () { context.read<AppBloc>().add(Toggle3D()); mapController?.animateCamera(CameraUpdate.tiltTo(state.is3D ? 0.0 : 60.0)); }, child: Icon(Icons.terrain, color: state.is3D ? Colors.white : Colors.blue)),
-              const SizedBox(height: 8),
-              FloatingActionButton(heroTag: 'toggle_marker_mode', mini: true, backgroundColor: _isPlacingMarker ? Colors.red : Colors.white, onPressed: () => setState(() { _isPlacingMarker = !_isPlacingMarker; _isDrawing = false; }), child: Icon(Icons.location_on, color: _isPlacingMarker ? Colors.white : Colors.red)),
-              const SizedBox(height: 8),
-              FloatingActionButton(heroTag: 'add_zone', mini: true, backgroundColor: _isDrawing ? Colors.orange : Colors.blue[100], onPressed: () { setState(() { _isDrawing = !_isDrawing; _dragStart = null; _dragEnd = null; _isPlacingMarker = false; }); if (_isDrawing) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Long-press and drag on map'))); } }, child: Icon(Icons.add_location_alt, color: _isDrawing ? Colors.white : Colors.blue)),
-              const SizedBox(height: 8),
-              FloatingActionButton(heroTag: 'clear_grid', mini: true, backgroundColor: Colors.red[100], onPressed: () => context.read<AppBloc>().add(ClearGrid()), child: const Icon(Icons.layers_clear, color: Colors.red)),
-              const SizedBox(height: 8),
-              FloatingActionButton(heroTag: 'recenter', mini: true, backgroundColor: Colors.white, onPressed: () { if (state.currentPosition != null) { mapController?.animateCamera(CameraUpdate.newLatLng(LatLng(state.currentPosition!.latitude, state.currentPosition!.longitude))); } }, child: const Icon(Icons.my_location, color: Colors.blue)),
-              const SizedBox(height: 8),
-              FloatingActionButton(heroTag: 'tracking_toggle', backgroundColor: state.isTracking ? Colors.red : Colors.green, onPressed: () { if (state.isTracking) { context.read<AppBloc>().add(StopTracking()); } else { context.read<AppBloc>().add(const StartTracking(state: 'AZ', county: 'Yavapai')); } }, child: Icon(state.isTracking ? Icons.stop : Icons.play_arrow)),
-              const SizedBox(height: 16),
-              FloatingActionButton(heroTag: 'zoom_in', mini: true, onPressed: () => mapController?.animateCamera(CameraUpdate.zoomIn()), child: const Icon(Icons.add)),
-              const SizedBox(height: 8),
-              FloatingActionButton(heroTag: 'zoom_out', mini: true, onPressed: () => mapController?.animateCamera(CameraUpdate.zoomOut()), child: const Icon(Icons.remove)),
-            ],
-          );
-        },
       ),
     );
   }
@@ -391,5 +400,21 @@ class _MapPageState extends State<MapPage> {
       };
     }).toList();
     try { await mapController?.setGeoJsonSource("marker-source", {"type": "FeatureCollection", "features": features}); } catch (e) { _isMarkerSourceAdded = false; }
+  }
+}
+
+class GridWalkerUpgraderMessages extends UpgraderMessages {
+  @override
+  String? message(UpgraderMessage messageKey) {
+    switch (messageKey) {
+      case UpgraderMessage.body:
+        return 'We\'ve fixed the persistent location permission prompts and added support for automatic update notifications to keep your SAR tools up to date.';
+      case UpgraderMessage.title:
+        return 'Update GridWalker?';
+      case UpgraderMessage.prompt:
+        return 'A new version of GridWalker is available. Would you like to update now?';
+      default:
+        return super.message(messageKey);
+    }
   }
 }
