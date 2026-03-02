@@ -39,15 +39,24 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<void> _checkPermissions() async {
-    final status = await Permission.locationAlways.status;
+    final state = context.read<AppBloc>().state;
+    if (state.hasSeenPermissionScreen) return;
+
+    final status = await Permission.locationWhenInUse.status;
     if (!status.isGranted && mounted) {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => LocationPermissionScreen(
-            onPermissionGranted: () => Navigator.of(context).pop(),
+            onPermissionGranted: () {
+              context.read<AppBloc>().add(MarkPermissionScreenSeen());
+              Navigator.of(context).pop();
+            },
           ),
         ),
       );
+    } else {
+      // If already granted, mark as seen so we don't check every time
+      context.read<AppBloc>().add(MarkPermissionScreenSeen());
     }
   }
 

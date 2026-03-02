@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SettingsRepository {
   static const String _keyIsSatellite = 'is_satellite';
   static const String _keyIs3D = 'is_3d';
+  static const String _keyHasSeenPermissionScreen = 'has_seen_permission_screen';
 
   final SharedPreferences _prefs;
 
@@ -18,5 +19,11 @@ class SettingsRepository {
 
   Future<void> set3D(bool value) async {
     await _prefs.setBool(_keyIs3D, value);
+  }
+
+  bool get hasSeenPermissionScreen => _prefs.getBool(_keyHasSeenPermissionScreen) ?? false;
+
+  Future<void> setHasSeenPermissionScreen(bool value) async {
+    await _prefs.setBool(_keyHasSeenPermissionScreen, value);
   }
 }
