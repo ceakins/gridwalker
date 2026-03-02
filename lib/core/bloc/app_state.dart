@@ -12,6 +12,7 @@ class AppState extends Equatable {
   final bool isSyncing;
   final bool isSatellite;
   final bool is3D;
+  final bool hasSeenPermissionScreen;
   final Position? currentPosition;
   final List<GridCell> gridCells;
   final List<SubjectRecord> markers;
@@ -23,6 +24,7 @@ class AppState extends Equatable {
     this.isSyncing = false,
     this.isSatellite = false,
     this.is3D = false,
+    this.hasSeenPermissionScreen = false,
     this.currentPosition,
     this.gridCells = const [],
     this.markers = const [],
@@ -35,6 +37,7 @@ class AppState extends Equatable {
     bool? isSyncing,
     bool? isSatellite,
     bool? is3D,
+    bool? hasSeenPermissionScreen,
     Position? currentPosition,
     List<GridCell>? gridCells,
     List<SubjectRecord>? markers,
@@ -46,6 +49,7 @@ class AppState extends Equatable {
       isSyncing: isSyncing ?? this.isSyncing,
       isSatellite: isSatellite ?? this.isSatellite,
       is3D: is3D ?? this.is3D,
+      hasSeenPermissionScreen: hasSeenPermissionScreen ?? this.hasSeenPermissionScreen,
       currentPosition: currentPosition ?? this.currentPosition,
       gridCells: gridCells ?? this.gridCells,
       markers: markers ?? this.markers,
@@ -53,5 +57,5 @@ class AppState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [status, errorMessage, isTracking, isSyncing, isSatellite, is3D, currentPosition, gridCells, markers];
+  List<Object?> get props => [status, errorMessage, isTracking, isSyncing, isSatellite, is3D, hasSeenPermissionScreen, currentPosition, gridCells, markers];
 }

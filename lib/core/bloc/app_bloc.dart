@@ -31,11 +31,13 @@ class AppBloc extends Bloc<AppEvent, AppState> {
   }) : super(AppState(
           isSatellite: settingsRepository.isSatellite,
           is3D: settingsRepository.is3D,
+          hasSeenPermissionScreen: settingsRepository.hasSeenPermissionScreen,
         )) {
     on<AppStarted>(_onAppStarted);
     on<StartTracking>(_onStartTracking);
     on<StopTracking>(_onStopTracking);
     on<ClearGrid>(_onClearGrid);
+    on<MarkPermissionScreenSeen>(_onMarkPermissionScreenSeen);
     on<ToggleSatellite>(_onToggleSatellite);
     on<Toggle3D>(_onToggle3D);
     on<ExportGrid>(_onExportGrid);
@@ -48,6 +50,11 @@ class AppBloc extends Bloc<AppEvent, AppState> {
 
     _posSub = trackingService.positionStream.listen((p) => add(PositionUpdated(p)));
     _gridSub = trackingService.gridStream.listen((g) => add(GridUpdated(g)));
+  }
+
+  Future<void> _onMarkPermissionScreenSeen(MarkPermissionScreenSeen event, Emitter<AppState> emit) async {
+    await settingsRepository.setHasSeenPermissionScreen(true);
+    emit(state.copyWith(hasSeenPermissionScreen: true));
   }
 
   Future<void> _onAddMarker(AddMarker event, Emitter<AppState> emit) async {
