@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:geolocator/geolocator.dart';
 import '../../data/repositories/isar_repository.dart';
 import '../../data/local/grid_cell.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 class TrackingService {
   final IsarRepository _isarRepository;

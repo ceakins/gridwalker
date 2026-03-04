@@ -17,47 +17,24 @@ const GridCellSchema = CollectionSchema(
   name: r'GridCell',
   id: 7859944282167996329,
   properties: {
-    r'caseId': PropertySchema(
-      id: 0,
-      name: r'caseId',
-      type: IsarType.string,
-    ),
-    r'county': PropertySchema(
-      id: 1,
-      name: r'county',
-      type: IsarType.string,
-    ),
+    r'caseId': PropertySchema(id: 0, name: r'caseId', type: IsarType.string),
+    r'county': PropertySchema(id: 1, name: r'county', type: IsarType.string),
     r'coverage': PropertySchema(
       id: 2,
       name: r'coverage',
       type: IsarType.double,
     ),
-    r'geoJson': PropertySchema(
-      id: 3,
-      name: r'geoJson',
-      type: IsarType.string,
-    ),
+    r'geoJson': PropertySchema(id: 3, name: r'geoJson', type: IsarType.string),
     r'lastCleared': PropertySchema(
       id: 4,
       name: r'lastCleared',
       type: IsarType.dateTime,
     ),
-    r'state': PropertySchema(
-      id: 5,
-      name: r'state',
-      type: IsarType.string,
-    ),
-    r'x': PropertySchema(
-      id: 6,
-      name: r'x',
-      type: IsarType.long,
-    ),
-    r'y': PropertySchema(
-      id: 7,
-      name: r'y',
-      type: IsarType.long,
-    )
+    r'state': PropertySchema(id: 5, name: r'state', type: IsarType.string),
+    r'x': PropertySchema(id: 6, name: r'x', type: IsarType.long),
+    r'y': PropertySchema(id: 7, name: r'y', type: IsarType.long),
   },
+
   estimateSize: _gridCellEstimateSize,
   serialize: _gridCellSerialize,
   deserialize: _gridCellDeserialize,
@@ -74,7 +51,7 @@ const GridCellSchema = CollectionSchema(
           name: r'x',
           type: IndexType.value,
           caseSensitive: false,
-        )
+        ),
       ],
     ),
     r'y': IndexSchema(
@@ -87,7 +64,7 @@ const GridCellSchema = CollectionSchema(
           name: r'y',
           type: IndexType.value,
           caseSensitive: false,
-        )
+        ),
       ],
     ),
     r'caseId': IndexSchema(
@@ -100,7 +77,7 @@ const GridCellSchema = CollectionSchema(
           name: r'caseId',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
     ),
     r'county': IndexSchema(
@@ -113,7 +90,7 @@ const GridCellSchema = CollectionSchema(
           name: r'county',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
     ),
     r'state': IndexSchema(
@@ -126,16 +103,17 @@ const GridCellSchema = CollectionSchema(
           name: r'state',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
-    )
+    ),
   },
   links: {},
   embeddedSchemas: {},
+
   getId: _gridCellGetId,
   getLinks: _gridCellGetLinks,
   attach: _gridCellAttach,
-  version: '3.1.0+1',
+  version: '3.3.0',
 );
 
 int _gridCellEstimateSize(
@@ -250,17 +228,13 @@ extension GridCellQueryWhereSort on QueryBuilder<GridCell, GridCell, QWhere> {
 
   QueryBuilder<GridCell, GridCell, QAfterWhere> anyX() {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'x'),
-      );
+      return query.addWhereClause(const IndexWhereClause.any(indexName: r'x'));
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhere> anyY() {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'y'),
-      );
+      return query.addWhereClause(const IndexWhereClause.any(indexName: r'y'));
     });
   }
 }
@@ -268,10 +242,7 @@ extension GridCellQueryWhereSort on QueryBuilder<GridCell, GridCell, QWhere> {
 extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: id,
-        upper: id,
-      ));
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
     });
   }
 
@@ -297,8 +268,10 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
     });
   }
 
-  QueryBuilder<GridCell, GridCell, QAfterWhereClause> idGreaterThan(Id id,
-      {bool include = false}) {
+  QueryBuilder<GridCell, GridCell, QAfterWhereClause> idGreaterThan(
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -306,8 +279,10 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
     });
   }
 
-  QueryBuilder<GridCell, GridCell, QAfterWhereClause> idLessThan(Id id,
-      {bool include = false}) {
+  QueryBuilder<GridCell, GridCell, QAfterWhereClause> idLessThan(
+    Id id, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -322,21 +297,22 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerId,
-        includeLower: includeLower,
-        upper: upperId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> xEqualTo(int x) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'x',
-        value: [x],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'x', value: [x]),
+      );
     });
   }
 
@@ -344,32 +320,40 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'x',
-              lower: [],
-              upper: [x],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'x',
-              lower: [x],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'x',
+                lower: [],
+                upper: [x],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'x',
+                lower: [x],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'x',
-              lower: [x],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'x',
-              lower: [],
-              upper: [x],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'x',
+                lower: [x],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'x',
+                lower: [],
+                upper: [x],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
@@ -379,12 +363,14 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'x',
-        lower: [x],
-        includeLower: include,
-        upper: [],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'x',
+          lower: [x],
+          includeLower: include,
+          upper: [],
+        ),
+      );
     });
   }
 
@@ -393,12 +379,14 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'x',
-        lower: [],
-        upper: [x],
-        includeUpper: include,
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'x',
+          lower: [],
+          upper: [x],
+          includeUpper: include,
+        ),
+      );
     });
   }
 
@@ -409,22 +397,23 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'x',
-        lower: [lowerX],
-        includeLower: includeLower,
-        upper: [upperX],
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'x',
+          lower: [lowerX],
+          includeLower: includeLower,
+          upper: [upperX],
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> yEqualTo(int y) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'y',
-        value: [y],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'y', value: [y]),
+      );
     });
   }
 
@@ -432,32 +421,40 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'y',
-              lower: [],
-              upper: [y],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'y',
-              lower: [y],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'y',
+                lower: [],
+                upper: [y],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'y',
+                lower: [y],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'y',
-              lower: [y],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'y',
-              lower: [],
-              upper: [y],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'y',
+                lower: [y],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'y',
+                lower: [],
+                upper: [y],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
@@ -467,12 +464,14 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'y',
-        lower: [y],
-        includeLower: include,
-        upper: [],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'y',
+          lower: [y],
+          includeLower: include,
+          upper: [],
+        ),
+      );
     });
   }
 
@@ -481,12 +480,14 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'y',
-        lower: [],
-        upper: [y],
-        includeUpper: include,
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'y',
+          lower: [],
+          upper: [y],
+          includeUpper: include,
+        ),
+      );
     });
   }
 
@@ -497,187 +498,218 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'y',
-        lower: [lowerY],
-        includeLower: includeLower,
-        upper: [upperY],
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'y',
+          lower: [lowerY],
+          includeLower: includeLower,
+          upper: [upperY],
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> caseIdEqualTo(
-      String caseId) {
+    String caseId,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'caseId',
-        value: [caseId],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'caseId', value: [caseId]),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> caseIdNotEqualTo(
-      String caseId) {
+    String caseId,
+  ) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'caseId',
-              lower: [],
-              upper: [caseId],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'caseId',
-              lower: [caseId],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'caseId',
+                lower: [],
+                upper: [caseId],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'caseId',
+                lower: [caseId],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'caseId',
-              lower: [caseId],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'caseId',
-              lower: [],
-              upper: [caseId],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'caseId',
+                lower: [caseId],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'caseId',
+                lower: [],
+                upper: [caseId],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> countyIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'county',
-        value: [null],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'county', value: [null]),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> countyIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'county',
-        lower: [null],
-        includeLower: false,
-        upper: [],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'county',
+          lower: [null],
+          includeLower: false,
+          upper: [],
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> countyEqualTo(
-      String? county) {
+    String? county,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'county',
-        value: [county],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'county', value: [county]),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> countyNotEqualTo(
-      String? county) {
+    String? county,
+  ) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'county',
-              lower: [],
-              upper: [county],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'county',
-              lower: [county],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'county',
+                lower: [],
+                upper: [county],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'county',
+                lower: [county],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'county',
-              lower: [county],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'county',
-              lower: [],
-              upper: [county],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'county',
+                lower: [county],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'county',
+                lower: [],
+                upper: [county],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> stateIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'state',
-        value: [null],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'state', value: [null]),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> stateIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'state',
-        lower: [null],
-        includeLower: false,
-        upper: [],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.between(
+          indexName: r'state',
+          lower: [null],
+          includeLower: false,
+          upper: [],
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> stateEqualTo(
-      String? state) {
+    String? state,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'state',
-        value: [state],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'state', value: [state]),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> stateNotEqualTo(
-      String? state) {
+    String? state,
+  ) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'state',
-              lower: [],
-              upper: [state],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'state',
-              lower: [state],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'state',
+                lower: [],
+                upper: [state],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'state',
+                lower: [state],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'state',
-              lower: [state],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'state',
-              lower: [],
-              upper: [state],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'state',
+                lower: [state],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'state',
+                lower: [],
+                upper: [state],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
@@ -690,11 +722,13 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'caseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'caseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -704,12 +738,14 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'caseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'caseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -719,12 +755,14 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'caseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'caseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -736,14 +774,16 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'caseId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'caseId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -752,11 +792,13 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'caseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'caseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -765,69 +807,75 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'caseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'caseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> caseIdContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'caseId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'caseId',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> caseIdMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'caseId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'caseId',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> caseIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'caseId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'caseId', value: ''),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> caseIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'caseId',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'caseId', value: ''),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> countyIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'county',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'county'),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> countyIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'county',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'county'),
+      );
     });
   }
 
@@ -836,11 +884,13 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'county',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'county',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -850,12 +900,14 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'county',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'county',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -865,12 +917,14 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'county',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'county',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -882,14 +936,16 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'county',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'county',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -898,11 +954,13 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'county',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'county',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -911,53 +969,59 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'county',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'county',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> countyContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'county',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'county',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> countyMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'county',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'county',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> countyIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'county',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'county', value: ''),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> countyIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'county',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'county', value: ''),
+      );
     });
   }
 
@@ -966,11 +1030,14 @@ extension GridCellQueryFilter
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'coverage',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'coverage',
+          value: value,
+
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
@@ -980,12 +1047,15 @@ extension GridCellQueryFilter
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'coverage',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'coverage',
+          value: value,
+
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
@@ -995,12 +1065,15 @@ extension GridCellQueryFilter
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'coverage',
-        value: value,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'coverage',
+          value: value,
+
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
@@ -1012,30 +1085,33 @@ extension GridCellQueryFilter
     double epsilon = Query.epsilon,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'coverage',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'coverage',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+
+          epsilon: epsilon,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> geoJsonIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'geoJson',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'geoJson'),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> geoJsonIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'geoJson',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'geoJson'),
+      );
     });
   }
 
@@ -1044,11 +1120,13 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'geoJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'geoJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1058,12 +1136,14 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'geoJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'geoJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1073,12 +1153,14 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'geoJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'geoJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1090,14 +1172,16 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'geoJson',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'geoJson',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1106,11 +1190,13 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'geoJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'geoJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1119,62 +1205,67 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'geoJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'geoJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> geoJsonContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'geoJson',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'geoJson',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> geoJsonMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'geoJson',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'geoJson',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> geoJsonIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'geoJson',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'geoJson', value: ''),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> geoJsonIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'geoJson',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'geoJson', value: ''),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
     });
   }
 
@@ -1183,11 +1274,13 @@ extension GridCellQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1196,11 +1289,13 @@ extension GridCellQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1211,54 +1306,55 @@ extension GridCellQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> lastClearedIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'lastCleared',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'lastCleared'),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition>
-      lastClearedIsNotNull() {
+  lastClearedIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'lastCleared',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'lastCleared'),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> lastClearedEqualTo(
-      DateTime? value) {
+    DateTime? value,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'lastCleared',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'lastCleared', value: value),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition>
-      lastClearedGreaterThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
+  lastClearedGreaterThan(DateTime? value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'lastCleared',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'lastCleared',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1267,11 +1363,13 @@ extension GridCellQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'lastCleared',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'lastCleared',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1282,29 +1380,31 @@ extension GridCellQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'lastCleared',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'lastCleared',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> stateIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'state',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'state'),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> stateIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'state',
-      ));
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'state'),
+      );
     });
   }
 
@@ -1313,11 +1413,13 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'state',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'state',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1327,12 +1429,14 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'state',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'state',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1342,12 +1446,14 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'state',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'state',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1359,14 +1465,16 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'state',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'state',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1375,11 +1483,13 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'state',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'state',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
@@ -1388,62 +1498,67 @@ extension GridCellQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'state',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'state',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> stateContains(
-      String value,
-      {bool caseSensitive = true}) {
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'state',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'state',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> stateMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
+    String pattern, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'state',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'state',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> stateIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'state',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'state', value: ''),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> stateIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'state',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'state', value: ''),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> xEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'x',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'x', value: value),
+      );
     });
   }
 
@@ -1452,11 +1567,13 @@ extension GridCellQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'x',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'x',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1465,11 +1582,13 @@ extension GridCellQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'x',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'x',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1480,22 +1599,23 @@ extension GridCellQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'x',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'x',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> yEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'y',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'y', value: value),
+      );
     });
   }
 
@@ -1504,11 +1624,13 @@ extension GridCellQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'y',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'y',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1517,11 +1639,13 @@ extension GridCellQueryFilter
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'y',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'y',
+          value: value,
+        ),
+      );
     });
   }
 
@@ -1532,13 +1656,15 @@ extension GridCellQueryFilter
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'y',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'y',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 }
@@ -1760,15 +1886,17 @@ extension GridCellQuerySortThenBy
 
 extension GridCellQueryWhereDistinct
     on QueryBuilder<GridCell, GridCell, QDistinct> {
-  QueryBuilder<GridCell, GridCell, QDistinct> distinctByCaseId(
-      {bool caseSensitive = true}) {
+  QueryBuilder<GridCell, GridCell, QDistinct> distinctByCaseId({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'caseId', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<GridCell, GridCell, QDistinct> distinctByCounty(
-      {bool caseSensitive = true}) {
+  QueryBuilder<GridCell, GridCell, QDistinct> distinctByCounty({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'county', caseSensitive: caseSensitive);
     });
@@ -1780,8 +1908,9 @@ extension GridCellQueryWhereDistinct
     });
   }
 
-  QueryBuilder<GridCell, GridCell, QDistinct> distinctByGeoJson(
-      {bool caseSensitive = true}) {
+  QueryBuilder<GridCell, GridCell, QDistinct> distinctByGeoJson({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'geoJson', caseSensitive: caseSensitive);
     });
@@ -1793,8 +1922,9 @@ extension GridCellQueryWhereDistinct
     });
   }
 
-  QueryBuilder<GridCell, GridCell, QDistinct> distinctByState(
-      {bool caseSensitive = true}) {
+  QueryBuilder<GridCell, GridCell, QDistinct> distinctByState({
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'state', caseSensitive: caseSensitive);
     });
