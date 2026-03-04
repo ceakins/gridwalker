@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "io.github.ceakins.gridwalker"
     compileSdk = 36
-    ndkVersion = "28.1.13356709"
+    ndkVersion = "29.0.13113456"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
