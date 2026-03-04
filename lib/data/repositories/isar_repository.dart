@@ -39,6 +39,10 @@ class IsarRepository {
     return _isar.subjectRecords.where().anyId().findAll();
   }
 
+  Future<SubjectRecord?> getSubjectById(Id id) async {
+    return _isar.subjectRecords.get(id);
+  }
+
   // --- Subject Records ---
   Future<List<SubjectRecord>> getSubjectsByCounty(String state, String county) {
     return _isar.subjectRecords

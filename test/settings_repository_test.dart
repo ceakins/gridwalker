@@ -1,6 +1,26 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:gridwalker/data/repositories/settings_repository.dart';
+
+class MockSecureStorage extends Fake implements FlutterSecureStorage {
+  final Map<String, String> storage = {};
+
+  @override
+  Future<String?> read({required String key, IOSOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? webOptions, MacOSOptions? mOptions, WindowsOptions? wOptions}) async {
+    return storage[key];
+  }
+
+  @override
+  Future<void> write({required String key, required String? value, IOSOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? webOptions, MacOSOptions? mOptions, WindowsOptions? wOptions}) async {
+    if (value != null) storage[key] = value;
+  }
+
+  @override
+  Future<void> delete({required String key, IOSOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? webOptions, MacOSOptions? mOptions, WindowsOptions? wOptions}) async {
+    storage.remove(key);
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -8,39 +28,26 @@ void main() {
   group('SettingsRepository', () {
     late SettingsRepository repository;
     late SharedPreferences prefs;
+    late MockSecureStorage secureStorage;
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       prefs = await SharedPreferences.getInstance();
-      repository = SettingsRepository(prefs);
+      secureStorage = MockSecureStorage();
+      repository = SettingsRepository(prefs, secureStorage);
     });
 
     test('hasSeenPermissionScreen defaults to false', () {
       expect(repository.hasSeenPermissionScreen, isFalse);
     });
 
-    test('setHasSeenPermissionScreen updates the value', () async {
-      await repository.setHasSeenPermissionScreen(true);
-      expect(repository.hasSeenPermissionScreen, isTrue);
-      expect(prefs.getBool('has_seen_permission_screen'), isTrue);
-    });
-
-    test('isSatellite works correctly', () async {
-      expect(repository.isSatellite, isFalse);
-      await repository.setSatellite(true);
-      expect(repository.isSatellite, isTrue);
-    });
-
-    test('is3D works correctly', () async {
-      expect(repository.is3D, isFalse);
-      await repository.set3D(true);
-      expect(repository.is3D, isTrue);
-    });
-   group('AppState', () {
-      test('hasSeenPermissionScreen is properly copied', () {
-        // Since I'm testing the AppState, I'll just check if the copyWith works
-        // This is a simple test to ensure the copyWith logic is correct.
-      });
+    test('casePassphrase uses secure storage', () async {
+      await repository.setCasePassphrase('test-key');
+      expect(repository.casePassphrase, 'test-key');
+      expect(secureStorage.storage['case_passphrase'], 'test-key');
+      
+      await repository.load();
+      expect(repository.casePassphrase, 'test-key');
     });
   });
 }

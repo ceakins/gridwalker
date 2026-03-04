@@ -29,6 +29,12 @@ dependencies:
   share_plus: ^12.0.1
   url_launcher: ^6.3.2
   upgrader: ^11.4.0
+  image_picker: ^1.1.2
+  encrypt: ^5.0.3
+  crypto: ^3.0.6
+  flutter_secure_storage: ^9.2.4
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^6.0.4
 
 dev_dependencies:
   flutter_test:

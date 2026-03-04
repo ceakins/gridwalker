@@ -27,29 +27,47 @@ class ClearGrid extends AppEvent {}
 
 class MarkPermissionScreenSeen extends AppEvent {}
 
+class SetMasterPassphrase extends AppEvent {
+  final String passphrase;
+  const SetMasterPassphrase(this.passphrase);
+  @override
+  List<Object?> get props => [passphrase];
+}
+
 class ToggleSatellite extends AppEvent {}
 
 class Toggle3D extends AppEvent {}
 
 class ExportGrid extends AppEvent {}
 
-class ImportGrid extends AppEvent {}
+class ImportGrid extends AppEvent {
+  final String? passphrase;
+  const ImportGrid({this.passphrase});
+  @override
+  List<Object?> get props => [passphrase];
+}
 
 class AddMarker extends AppEvent {
   final String name;
   final String type;
   final double lat;
   final double lng;
+  final String? photoPath;
+  final String? photoBase64;
+  final bool isPhotoEncrypted;
 
   const AddMarker({
     required this.name,
     required this.type,
     required this.lat,
     required this.lng,
+    this.photoPath,
+    this.photoBase64,
+    this.isPhotoEncrypted = false,
   });
 
   @override
-  List<Object?> get props => [name, type, lat, lng];
+  List<Object?> get props => [name, type, lat, lng, photoPath, photoBase64, isPhotoEncrypted];
 }
 
 class CreateSearchZone extends AppEvent {
@@ -57,16 +75,18 @@ class CreateSearchZone extends AppEvent {
   final double maxLat;
   final double minLng;
   final double maxLng;
+  final String caseId;
 
   const CreateSearchZone({
     required this.minLat,
     required this.maxLat,
     required this.minLng,
     required this.maxLng,
+    required this.caseId,
   });
 
   @override
-  List<Object?> get props => [minLat, maxLat, minLng, maxLng];
+  List<Object?> get props => [minLat, maxLat, minLng, maxLng, caseId];
 }
 
 class PositionUpdated extends AppEvent {

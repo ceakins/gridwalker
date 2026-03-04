@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:upgrader/upgrader.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../core/utils/encryption_helper.dart';
 import '../../../core/bloc/app_bloc.dart';
 import '../../../core/bloc/app_state.dart';
 import '../../../core/bloc/app_event.dart';
@@ -36,7 +39,57 @@ class _MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkPermissions());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPermissions();
+      _checkMasterPassphrase();
+    });
+  }
+
+  void _checkMasterPassphrase() {
+    final state = context.read<AppBloc>().state;
+    if (!state.isMasterPassphraseSet) {
+      _showMasterPassphraseDialog();
+    }
+  }
+
+  Future<void> _showMasterPassphraseDialog() async {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Setup Forensic Encryption'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Set a master passphrase to secure forensic photos. This is stored only on your device.'),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: controller,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Master Passphrase', hintText: 'Minimum 8 characters'),
+                validator: (v) => (v == null || v.length < 8) ? 'Min 8 characters required' : null,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                context.read<AppBloc>().add(SetMasterPassphrase(controller.text));
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Set Passphrase'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _checkPermissions() async {
@@ -142,12 +195,32 @@ class _MapPageState extends State<MapPage> {
     final ratio = MediaQuery.of(context).devicePixelRatio;
     final point = Point(localPosition.dx * ratio, localPosition.dy * ratio);
     
+    debugPrint("Global Tap at logical: $localPosition, physical: $point");
+
     // 1. Check if we tapped an existing marker
     final features = await mapController?.queryRenderedFeatures(point, ["marker-layer"], null);
+    debugPrint("Features found: ${features?.length}");
+
     if (features != null && features.isNotEmpty) {
       final properties = features.first["properties"];
-      _showMarkerInfoDialog(properties["name"], properties["type"]);
-      return;
+      debugPrint("Marker properties: $properties");
+      
+      final dynamic idValue = properties["id"];
+      int? id;
+      if (idValue is int) {
+        id = idValue;
+      } else if (idValue is num) {
+        id = idValue.toInt();
+      } else if (idValue != null) {
+        id = int.tryParse(idValue.toString()) ?? double.tryParse(idValue.toString())?.toInt();
+      }
+      
+      if (id != null) {
+        _showMarkerInfoDialog(id, properties["name"] ?? "Unknown", properties["type"] ?? "clue");
+        return;
+      } else {
+        debugPrint("Could not parse ID from marker: $idValue");
+      }
     }
 
     // 2. Otherwise, if in placing mode, add a new one
@@ -159,13 +232,56 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  void _showMarkerInfoDialog(String name, String type) {
+  void _showMarkerInfoDialog(int id, String name, String type) async {
+    final bloc = context.read<AppBloc>();
+    final marker = await bloc.isarRepository.getSubjectById(id);
+    if (marker == null) return;
+
     String typeLabel = type == 'clue' ? '🟡 Clue' : (type == 'subject' ? '🟢 Subject' : '📍 POI');
+    
+    Widget? imageWidget;
+    if (marker.photoBase64 != null) {
+      String base64Data = marker.photoBase64!;
+      if (marker.isPhotoEncrypted) {
+        base64Data = EncryptionHelper.decrypt(base64Data, passphrase: bloc.settingsRepository.casePassphrase);
+      }
+      
+      if (base64Data != "DECRYPTION_FAILED") {
+        try {
+          imageWidget = Padding(
+            padding: const EdgeInsets.only(top: 16.0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: Image.memory(base64Decode(base64Data), fit: BoxFit.cover),
+            ),
+          );
+        } catch (e) {
+          debugPrint("Failed to decode image: $e");
+        }
+      } else {
+        imageWidget = const Padding(
+          padding: EdgeInsets.only(top: 16.0),
+          child: Text("🔒 Image Encrypted / Decryption Failed", style: TextStyle(color: Colors.red)),
+        );
+      }
+    }
+
+    if (!mounted) return;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(typeLabel),
-        content: Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              if (imageWidget != null) imageWidget,
+            ],
+          ),
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
         ],
@@ -176,39 +292,87 @@ class _MapPageState extends State<MapPage> {
   Future<void> _showAddMarkerDialog(LatLng latLng) async {
     final nameController = TextEditingController();
     String type = 'clue';
+    XFile? pickedFile;
+    bool encryptPhoto = false;
 
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Search Marker'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: nameController, autofocus: true, decoration: const InputDecoration(labelText: 'Description')),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: type,
-              items: const [
-                DropdownMenuItem(value: 'clue', child: Text('🟡 Clue')),
-                DropdownMenuItem(value: 'subject', child: Text('🟢 Subject Found')),
-                DropdownMenuItem(value: 'poi', child: Text('📍 Point of Interest')),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Add Search Marker'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(controller: nameController, autofocus: true, decoration: const InputDecoration(labelText: 'Description')),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: type,
+                  items: const [
+                    DropdownMenuItem(value: 'clue', child: Text('🟡 Clue')),
+                    DropdownMenuItem(value: 'subject', child: Text('🟢 Subject Found')),
+                    DropdownMenuItem(value: 'poi', child: Text('📍 Point of Interest')),
+                  ],
+                  onChanged: (v) => type = v!,
+                ),
+                const SizedBox(height: 16),
+                if (pickedFile != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Image.file(File(pickedFile!.path), height: 100),
+                  ),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final picker = ImagePicker();
+                    final image = await picker.pickImage(source: ImageSource.camera, imageQuality: 50);
+                    if (image != null) {
+                      setState(() => pickedFile = image);
+                    }
+                  },
+                  icon: const Icon(Icons.camera_alt),
+                  label: const Text('Take Photo'),
+                ),
+                if (pickedFile != null)
+                  CheckboxListTile(
+                    title: const Text("Encrypt for forensics"),
+                    value: encryptPhoto,
+                    onChanged: (v) => setState(() => encryptPhoto = v!),
+                  ),
               ],
-              onChanged: (v) => type = v!,
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            ElevatedButton(
+              onPressed: () async {
+                String? base64Photo;
+                if (pickedFile != null) {
+                  final bytes = await pickedFile!.readAsBytes();
+                  base64Photo = base64Encode(bytes);
+                  if (encryptPhoto) {
+                    base64Photo = EncryptionHelper.encrypt(base64Photo);
+                  }
+                }
+
+                if (mounted) {
+                  context.read<AppBloc>().add(AddMarker(
+                    name: nameController.text,
+                    type: type,
+                    lat: latLng.latitude,
+                    lng: latLng.longitude,
+                    photoPath: pickedFile?.path,
+                    photoBase64: base64Photo,
+                    isPhotoEncrypted: encryptPhoto,
+                  ));
+                  Navigator.pop(context);
+                  this.setState(() => _isPlacingMarker = false);
+                }
+              },
+              child: const Text('Add Marker'),
             ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              context.read<AppBloc>().add(AddMarker(name: nameController.text, type: type, lat: latLng.latitude, lng: latLng.longitude));
-              Navigator.pop(context);
-              setState(() => _isPlacingMarker = false);
-            },
-            child: const Text('Add Marker'),
-          ),
-        ],
       ),
     );
   }
@@ -324,7 +488,18 @@ class _MapPageState extends State<MapPage> {
                         final maxLat = max(_dragStart!.latitude, _dragEnd!.latitude);
                         final minLng = min(_dragStart!.longitude, _dragEnd!.longitude);
                         final maxLng = max(_dragStart!.longitude, _dragEnd!.longitude);
-                        context.read<AppBloc>().add(CreateSearchZone(minLat: minLat, maxLat: maxLat, minLng: minLng, maxLng: maxLng));
+                        
+                        final caseId = await _showCaseIdDialog();
+                        if (caseId != null && caseId.isNotEmpty && mounted) {
+                          context.read<AppBloc>().add(CreateSearchZone(
+                            minLat: minLat, 
+                            maxLat: maxLat, 
+                            minLng: minLng, 
+                            maxLng: maxLng,
+                            caseId: caseId,
+                          ));
+                        }
+                        
                         if (_isSelectionSourceAdded) { try { await mapController?.setGeoJsonSource("selection-source", {"type": "FeatureCollection", "features": []}); } catch (e) {} }
                         setState(() { _isDrawing = false; _dragStart = null; _dragEnd = null; });
                       },
@@ -366,6 +541,35 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  Future<String?> _showCaseIdDialog() async {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Enter Case Name/Number'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'e.g. Case-2024-001',
+            labelText: 'Case ID',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Create Grid'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _updateUserMarker(AppState state) async {
     if (state.currentPosition == null || mapController == null) return;
     final pos = LatLng(state.currentPosition!.latitude, state.currentPosition!.longitude);
@@ -378,14 +582,14 @@ class _MapPageState extends State<MapPage> {
 
   void _updateGridMap(AppState state) async {
     if (mapController == null || !_isGridSourceAdded) return;
-    final features = state.gridCells.map((cell) => {"type": "Feature", "geometry": jsonDecode(cell.geoJson), "properties": {"color": cell.coverage >= 1.0 ? "#3bb2d0" : "#555555"}}).toList();
+    final features = state.gridCells.map((cell) => {"type": "Feature", "geometry": jsonDecode(cell.geoJson!), "properties": {"color": cell.coverage >= 1.0 ? "#3bb2d0" : "#555555"}}).toList();
     try { await mapController?.setGeoJsonSource("grid-source", {"type": "FeatureCollection", "features": features}); } catch (e) { _isGridSourceAdded = false; }
   }
 
   void _updateMarkers(AppState state) async {
     if (mapController == null || !_isMarkerSourceAdded) return;
     final features = state.markers.map((marker) {
-      final geo = jsonDecode(marker.geoJson);
+      final geo = jsonDecode(marker.geoJson!);
       String color = "#FFFF00"; 
       if (marker.markerType == 'subject') color = "#00FF00"; 
       if (marker.markerType == 'poi') color = "#FFFFFF"; 
@@ -393,6 +597,7 @@ class _MapPageState extends State<MapPage> {
         "type": "Feature", 
         "geometry": geo, 
         "properties": {
+          "id": marker.id,
           "color": color, 
           "name": marker.name,
           "type": marker.markerType,
