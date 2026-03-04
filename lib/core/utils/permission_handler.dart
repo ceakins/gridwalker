@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class LocationPermissionHandler {
-  /// Displays the prominent disclosure required by Google Play.
-  static Future<void> showProminentDisclosure(BuildContext context, VoidCallback onAgreed) async {
+class AppPermissionHandler {
+  /// Displays the prominent disclosure required by Google Play for Background Location.
+  static Future<void> showLocationDisclosure(BuildContext context, VoidCallback onAgreed) async {
     return showDialog(
       context: context,
       barrierDismissible: false,
@@ -41,22 +41,37 @@ class LocationPermissionHandler {
       if (backgroundStatus.isGranted) {
         return true;
       } else if (backgroundStatus.isPermanentlyDenied) {
-        // Direct the user to settings if they denied background access previously
         if (context.mounted) {
-          _showSettingsDialog(context);
+          _showSettingsDialog(context, 'Location', 'Allow all the time');
         }
+      }
+      // If foreground is granted but background is not, we still return true
+      // because the app can function (mostly) with foreground only.
+      return true;
+    }
+    return false;
+  }
+
+  /// Handles Camera permission request for forensics.
+  static Future<bool> requestCameraPermission(BuildContext context) async {
+    final status = await Permission.camera.request();
+    if (status.isGranted) {
+      return true;
+    } else if (status.isPermanentlyDenied) {
+      if (context.mounted) {
+        _showSettingsDialog(context, 'Camera', 'Allow');
       }
     }
     return false;
   }
 
-  static void _showSettingsDialog(BuildContext context) {
+  static void _showSettingsDialog(BuildContext context, String feature, String permissionName) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Permission Required'),
-        content: const Text(
-          'To track your search path while the screen is off, please set Location access to "Allow all the time" in the App Settings.',
+        title: Text('$feature Permission Required'),
+        content: Text(
+          'To use this feature, please enable $feature access (set to "$permissionName") in the App Settings.',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
