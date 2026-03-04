@@ -2,7 +2,7 @@ name: gridwalker
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 0.1.10+10
+version: 0.1.11+11
 
 environment:
   sdk: ^3.8.1
@@ -13,8 +13,8 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   maplibre_gl: ^0.25.0
-  isar: ^4.0.0-dev.14
-  isar_flutter_libs: ^4.0.0-dev.14
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
   path_provider: ^2.1.5
   flutter_p2p_connection: ^3.0.3
   geolocator: ^14.0.2
@@ -41,7 +41,7 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^5.0.0
-  isar_generator: 3.1.0+1
+  isar_generator: ^3.1.0+1
   build_runner: ^2.4.13
   flutter_launcher_icons: ^0.14.4
 
