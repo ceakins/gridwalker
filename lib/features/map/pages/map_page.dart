@@ -96,12 +96,14 @@ class _MapPageState extends State<MapPage> {
     final state = context.read<AppBloc>().state;
     if (state.hasSeenPermissionScreen) return;
 
-    final status = await Permission.locationWhenInUse.status;
-    if (!status.isGranted && mounted) {
+    final locStatus = await Permission.locationWhenInUse.status;
+    final camStatus = await Permission.camera.status;
+
+    if ((!locStatus.isGranted || !camStatus.isGranted) && mounted) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => LocationPermissionScreen(
-            onPermissionGranted: () {
+          builder: (_) => PermissionOnboardingScreen(
+            onAllPermissionsGranted: () {
               context.read<AppBloc>().add(MarkPermissionScreenSeen());
               Navigator.of(context).pop();
             },
