@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:github/github.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'core/bloc/app_bloc.dart';
 import 'core/bloc/app_event.dart';
 import 'data/repositories/isar_repository.dart';
@@ -29,7 +30,10 @@ Future<void> main() async {
   await isarRepository.init();
 
   final prefs = await SharedPreferences.getInstance();
-  final settingsRepository = SettingsRepository(prefs);
+  const secureStorage = FlutterSecureStorage();
+  
+  final settingsRepository = SettingsRepository(prefs, secureStorage);
+  await settingsRepository.load();
 
   final trackingService = TrackingService(isarRepository);
   

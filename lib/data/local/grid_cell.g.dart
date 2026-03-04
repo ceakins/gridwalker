@@ -17,38 +17,43 @@ const GridCellSchema = CollectionSchema(
   name: r'GridCell',
   id: 7859944282167996329,
   properties: {
-    r'county': PropertySchema(
+    r'caseId': PropertySchema(
       id: 0,
+      name: r'caseId',
+      type: IsarType.string,
+    ),
+    r'county': PropertySchema(
+      id: 1,
       name: r'county',
       type: IsarType.string,
     ),
     r'coverage': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'coverage',
       type: IsarType.double,
     ),
     r'geoJson': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'geoJson',
       type: IsarType.string,
     ),
     r'lastCleared': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'lastCleared',
       type: IsarType.dateTime,
     ),
     r'state': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'state',
       type: IsarType.string,
     ),
     r'x': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'x',
       type: IsarType.long,
     ),
     r'y': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'y',
       type: IsarType.long,
     )
@@ -82,6 +87,19 @@ const GridCellSchema = CollectionSchema(
           name: r'y',
           type: IndexType.value,
           caseSensitive: false,
+        )
+      ],
+    ),
+    r'caseId': IndexSchema(
+      id: 7316275356094004476,
+      name: r'caseId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'caseId',
+          type: IndexType.hash,
+          caseSensitive: true,
         )
       ],
     ),
@@ -126,9 +144,25 @@ int _gridCellEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.county.length * 3;
-  bytesCount += 3 + object.geoJson.length * 3;
-  bytesCount += 3 + object.state.length * 3;
+  bytesCount += 3 + object.caseId.length * 3;
+  {
+    final value = object.county;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.geoJson;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.state;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -138,13 +172,14 @@ void _gridCellSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.county);
-  writer.writeDouble(offsets[1], object.coverage);
-  writer.writeString(offsets[2], object.geoJson);
-  writer.writeDateTime(offsets[3], object.lastCleared);
-  writer.writeString(offsets[4], object.state);
-  writer.writeLong(offsets[5], object.x);
-  writer.writeLong(offsets[6], object.y);
+  writer.writeString(offsets[0], object.caseId);
+  writer.writeString(offsets[1], object.county);
+  writer.writeDouble(offsets[2], object.coverage);
+  writer.writeString(offsets[3], object.geoJson);
+  writer.writeDateTime(offsets[4], object.lastCleared);
+  writer.writeString(offsets[5], object.state);
+  writer.writeLong(offsets[6], object.x);
+  writer.writeLong(offsets[7], object.y);
 }
 
 GridCell _gridCellDeserialize(
@@ -154,14 +189,15 @@ GridCell _gridCellDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = GridCell();
-  object.county = reader.readString(offsets[0]);
-  object.coverage = reader.readDouble(offsets[1]);
-  object.geoJson = reader.readString(offsets[2]);
+  object.caseId = reader.readString(offsets[0]);
+  object.county = reader.readStringOrNull(offsets[1]);
+  object.coverage = reader.readDouble(offsets[2]);
+  object.geoJson = reader.readStringOrNull(offsets[3]);
   object.id = id;
-  object.lastCleared = reader.readDateTime(offsets[3]);
-  object.state = reader.readString(offsets[4]);
-  object.x = reader.readLong(offsets[5]);
-  object.y = reader.readLong(offsets[6]);
+  object.lastCleared = reader.readDateTimeOrNull(offsets[4]);
+  object.state = reader.readStringOrNull(offsets[5]);
+  object.x = reader.readLong(offsets[6]);
+  object.y = reader.readLong(offsets[7]);
   return object;
 }
 
@@ -175,16 +211,18 @@ P _gridCellDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 3:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 5:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 6:
+      return (reader.readLong(offset)) as P;
+    case 7:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -469,8 +507,73 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
     });
   }
 
+  QueryBuilder<GridCell, GridCell, QAfterWhereClause> caseIdEqualTo(
+      String caseId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'caseId',
+        value: [caseId],
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterWhereClause> caseIdNotEqualTo(
+      String caseId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'caseId',
+              lower: [],
+              upper: [caseId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'caseId',
+              lower: [caseId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'caseId',
+              lower: [caseId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'caseId',
+              lower: [],
+              upper: [caseId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterWhereClause> countyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'county',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterWhereClause> countyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'county',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> countyEqualTo(
-      String county) {
+      String? county) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
         indexName: r'county',
@@ -480,7 +583,7 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> countyNotEqualTo(
-      String county) {
+      String? county) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -514,8 +617,28 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
     });
   }
 
+  QueryBuilder<GridCell, GridCell, QAfterWhereClause> stateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'state',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterWhereClause> stateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'state',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> stateEqualTo(
-      String state) {
+      String? state) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
         indexName: r'state',
@@ -525,7 +648,7 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
   }
 
   QueryBuilder<GridCell, GridCell, QAfterWhereClause> stateNotEqualTo(
-      String state) {
+      String? state) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -562,8 +685,154 @@ extension GridCellQueryWhere on QueryBuilder<GridCell, GridCell, QWhereClause> {
 
 extension GridCellQueryFilter
     on QueryBuilder<GridCell, GridCell, QFilterCondition> {
-  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> countyEqualTo(
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> caseIdEqualTo(
     String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'caseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> caseIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'caseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> caseIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'caseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> caseIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'caseId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> caseIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'caseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> caseIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'caseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> caseIdContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'caseId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> caseIdMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'caseId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> caseIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'caseId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> caseIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'caseId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> countyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'county',
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> countyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'county',
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> countyEqualTo(
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -576,7 +845,7 @@ extension GridCellQueryFilter
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> countyGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -591,7 +860,7 @@ extension GridCellQueryFilter
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> countyLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -606,8 +875,8 @@ extension GridCellQueryFilter
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> countyBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -754,8 +1023,24 @@ extension GridCellQueryFilter
     });
   }
 
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> geoJsonIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'geoJson',
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> geoJsonIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'geoJson',
+      ));
+    });
+  }
+
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> geoJsonEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -768,7 +1053,7 @@ extension GridCellQueryFilter
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> geoJsonGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -783,7 +1068,7 @@ extension GridCellQueryFilter
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> geoJsonLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -798,8 +1083,8 @@ extension GridCellQueryFilter
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> geoJsonBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -936,8 +1221,25 @@ extension GridCellQueryFilter
     });
   }
 
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> lastClearedIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastCleared',
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition>
+      lastClearedIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastCleared',
+      ));
+    });
+  }
+
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> lastClearedEqualTo(
-      DateTime value) {
+      DateTime? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'lastCleared',
@@ -948,7 +1250,7 @@ extension GridCellQueryFilter
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition>
       lastClearedGreaterThan(
-    DateTime value, {
+    DateTime? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -961,7 +1263,7 @@ extension GridCellQueryFilter
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> lastClearedLessThan(
-    DateTime value, {
+    DateTime? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -974,8 +1276,8 @@ extension GridCellQueryFilter
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> lastClearedBetween(
-    DateTime lower,
-    DateTime upper, {
+    DateTime? lower,
+    DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
@@ -990,8 +1292,24 @@ extension GridCellQueryFilter
     });
   }
 
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> stateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'state',
+      ));
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterFilterCondition> stateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'state',
+      ));
+    });
+  }
+
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> stateEqualTo(
-    String value, {
+    String? value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1004,7 +1322,7 @@ extension GridCellQueryFilter
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> stateGreaterThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1019,7 +1337,7 @@ extension GridCellQueryFilter
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> stateLessThan(
-    String value, {
+    String? value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1034,8 +1352,8 @@ extension GridCellQueryFilter
   }
 
   QueryBuilder<GridCell, GridCell, QAfterFilterCondition> stateBetween(
-    String lower,
-    String upper, {
+    String? lower,
+    String? upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -1232,6 +1550,18 @@ extension GridCellQueryLinks
     on QueryBuilder<GridCell, GridCell, QFilterCondition> {}
 
 extension GridCellQuerySortBy on QueryBuilder<GridCell, GridCell, QSortBy> {
+  QueryBuilder<GridCell, GridCell, QAfterSortBy> sortByCaseId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'caseId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterSortBy> sortByCaseIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'caseId', Sort.desc);
+    });
+  }
+
   QueryBuilder<GridCell, GridCell, QAfterSortBy> sortByCounty() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'county', Sort.asc);
@@ -1319,6 +1649,18 @@ extension GridCellQuerySortBy on QueryBuilder<GridCell, GridCell, QSortBy> {
 
 extension GridCellQuerySortThenBy
     on QueryBuilder<GridCell, GridCell, QSortThenBy> {
+  QueryBuilder<GridCell, GridCell, QAfterSortBy> thenByCaseId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'caseId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<GridCell, GridCell, QAfterSortBy> thenByCaseIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'caseId', Sort.desc);
+    });
+  }
+
   QueryBuilder<GridCell, GridCell, QAfterSortBy> thenByCounty() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'county', Sort.asc);
@@ -1418,6 +1760,13 @@ extension GridCellQuerySortThenBy
 
 extension GridCellQueryWhereDistinct
     on QueryBuilder<GridCell, GridCell, QDistinct> {
+  QueryBuilder<GridCell, GridCell, QDistinct> distinctByCaseId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'caseId', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<GridCell, GridCell, QDistinct> distinctByCounty(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1472,7 +1821,13 @@ extension GridCellQueryProperty
     });
   }
 
-  QueryBuilder<GridCell, String, QQueryOperations> countyProperty() {
+  QueryBuilder<GridCell, String, QQueryOperations> caseIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'caseId');
+    });
+  }
+
+  QueryBuilder<GridCell, String?, QQueryOperations> countyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'county');
     });
@@ -1484,19 +1839,19 @@ extension GridCellQueryProperty
     });
   }
 
-  QueryBuilder<GridCell, String, QQueryOperations> geoJsonProperty() {
+  QueryBuilder<GridCell, String?, QQueryOperations> geoJsonProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'geoJson');
     });
   }
 
-  QueryBuilder<GridCell, DateTime, QQueryOperations> lastClearedProperty() {
+  QueryBuilder<GridCell, DateTime?, QQueryOperations> lastClearedProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastCleared');
     });
   }
 
-  QueryBuilder<GridCell, String, QQueryOperations> stateProperty() {
+  QueryBuilder<GridCell, String?, QQueryOperations> stateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'state');
     });

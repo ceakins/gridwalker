@@ -7,24 +7,30 @@ class SubjectRecord {
   Id id = Isar.autoIncrement;
 
   @Index(type: IndexType.value)
-  late String state;
+  String? state;
 
   @Index(type: IndexType.value)
-  late String county;
+  String? county;
 
   @Index()
-  late String caseId;
+  String? caseId;
 
-  late String name;
+  String? name;
   
-  late String geoJson; // GeoJSON Point for the marker location
+  String? geoJson; // GeoJSON Point for the marker location
 
-  late DateTime lastUpdated;
+  DateTime? lastUpdated;
 
   @Index()
-  late bool isActive;
+  bool isActive = true;
 
   /// Type of marker: 'subject', 'clue', 'poi'
   @Index()
-  late String markerType;
+  String? markerType;
+
+  String? photoPath; // Local path to the photo file
+
+  String? photoBase64; // Base64 encoded photo (encrypted if isPhotoEncrypted is true)
+
+  bool isPhotoEncrypted = false;
 }

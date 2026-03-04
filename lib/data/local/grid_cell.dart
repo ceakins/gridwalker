@@ -7,22 +7,25 @@ class GridCell {
   Id id = Isar.autoIncrement;
 
   @Index()
-  late int x;
+  int x = 0;
 
   @Index()
-  late int y;
+  int y = 0;
 
   @Index()
-  late String county;
+  String caseId = "unknown";
 
   @Index()
-  late String state;
+  String? county;
+
+  @Index()
+  String? state;
 
   /// Probability of Detection (POD) or coverage percentage (0.0 to 1.0)
-  late double coverage;
+  double coverage = 0.0;
 
-  late DateTime lastCleared;
+  DateTime? lastCleared;
 
   /// GeoJSON representation of the cell polygon
-  late String geoJson;
+  String? geoJson;
 }

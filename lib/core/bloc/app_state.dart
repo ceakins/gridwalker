@@ -13,6 +13,8 @@ class AppState extends Equatable {
   final bool isSatellite;
   final bool is3D;
   final bool hasSeenPermissionScreen;
+  final bool isMasterPassphraseSet;
+  final String? currentCaseId;
   final Position? currentPosition;
   final List<GridCell> gridCells;
   final List<SubjectRecord> markers;
@@ -25,6 +27,8 @@ class AppState extends Equatable {
     this.isSatellite = false,
     this.is3D = false,
     this.hasSeenPermissionScreen = false,
+    this.isMasterPassphraseSet = false,
+    this.currentCaseId,
     this.currentPosition,
     this.gridCells = const [],
     this.markers = const [],
@@ -38,6 +42,8 @@ class AppState extends Equatable {
     bool? isSatellite,
     bool? is3D,
     bool? hasSeenPermissionScreen,
+    bool? isMasterPassphraseSet,
+    String? currentCaseId,
     Position? currentPosition,
     List<GridCell>? gridCells,
     List<SubjectRecord>? markers,
@@ -50,6 +56,8 @@ class AppState extends Equatable {
       isSatellite: isSatellite ?? this.isSatellite,
       is3D: is3D ?? this.is3D,
       hasSeenPermissionScreen: hasSeenPermissionScreen ?? this.hasSeenPermissionScreen,
+      isMasterPassphraseSet: isMasterPassphraseSet ?? this.isMasterPassphraseSet,
+      currentCaseId: currentCaseId ?? this.currentCaseId,
       currentPosition: currentPosition ?? this.currentPosition,
       gridCells: gridCells ?? this.gridCells,
       markers: markers ?? this.markers,
@@ -57,5 +65,5 @@ class AppState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [status, errorMessage, isTracking, isSyncing, isSatellite, is3D, hasSeenPermissionScreen, currentPosition, gridCells, markers];
+  List<Object?> get props => [status, errorMessage, isTracking, isSyncing, isSatellite, is3D, hasSeenPermissionScreen, isMasterPassphraseSet, currentCaseId, currentPosition, gridCells, markers];
 }

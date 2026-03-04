@@ -5,6 +5,7 @@ import '../../../core/bloc/app_event.dart';
 import '../../../core/bloc/app_state.dart';
 import '../github_sync_service.dart';
 import '../../../data/repositories/isar_repository.dart';
+import 'key_share_page.dart';
 
 class SyncDashboardPage extends StatelessWidget {
   final IsarRepository isarRepository;
@@ -53,10 +54,53 @@ class SyncDashboardPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               ElevatedButton.icon(
-                onPressed: () => context.read<AppBloc>().add(ImportGrid()),
+                onPressed: () async {
+                  final bloc = context.read<AppBloc>();
+                  if (bloc.settingsRepository.casePassphrase == null) {
+                    final proceed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Encryption Key Missing'),
+                        content: const Text('No case key is set. If the file you are importing contains encrypted photos, you should scan the case QR key first. Proceed anyway?'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Scan QR Key')),
+                          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Proceed (Standard)')),
+                        ],
+                      ),
+                    );
+
+                    if (proceed == false && context.mounted) {
+                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => KeySharePage(settingsRepository: bloc.settingsRepository)));
+                      return;
+                    }
+                    if (proceed == null) return;
+                  }
+                  
+                  if (context.mounted) {
+                    bloc.add(const ImportGrid());
+                  }
+                },
                 icon: const Icon(Icons.file_download),
                 label: const Text('Import Search Grid (JSON)'),
                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.all(16)),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  final bloc = context.read<AppBloc>();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => KeySharePage(settingsRepository: bloc.settingsRepository),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.qr_code_2),
+                label: const Text('Sync Case Key (QR)'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.all(16),
+                  backgroundColor: Colors.orange[800],
+                  foregroundColor: Colors.white,
+                ),
               ),
               const Divider(height: 48),
               const Text('Cloud Synchronization', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
