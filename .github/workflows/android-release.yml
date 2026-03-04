@@ -48,12 +48,17 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
 
+      - name: Rename Release Files
+        run: |
+          mv build/app/outputs/bundle/release/app-release.aab build/app/outputs/bundle/release/gridwalker-${{ github.ref_name }}.aab
+          mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/gridwalker-${{ github.ref_name }}.apk
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/app/outputs/bundle/release/app-release.aab
-            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/gridwalker-${{ github.ref_name }}.aab
+            build/app/outputs/flutter-apk/gridwalker-${{ github.ref_name }}.apk
           generate_release_notes: true
           draft: false
           prerelease: false
