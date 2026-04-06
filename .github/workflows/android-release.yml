@@ -53,12 +53,19 @@ jobs:
           mv build/app/outputs/bundle/release/app-release.aab build/app/outputs/bundle/release/gridwalker-${{ github.ref_name }}.aab
           mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/gridwalker-${{ github.ref_name }}.apk
 
+      - name: Generate DartDocs
+        run: dart doc .
+
+      - name: Zip DartDocs
+        run: zip -r gridwalker-docs-${{ github.ref_name }}.zip doc/api
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             build/app/outputs/bundle/release/gridwalker-${{ github.ref_name }}.aab
             build/app/outputs/flutter-apk/gridwalker-${{ github.ref_name }}.apk
+            gridwalker-docs-${{ github.ref_name }}.zip
           generate_release_notes: true
           draft: false
           prerelease: false

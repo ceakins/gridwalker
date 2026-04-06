@@ -5,6 +5,10 @@ import '../../data/repositories/isar_repository.dart';
 import '../../data/local/grid_cell.dart';
 import 'package:isar_community/isar.dart';
 
+/// A service responsible for handling GPS tracking and search grid updates.
+/// 
+/// It listens to position updates and calculates search coverage using
+/// a grid-based interpolation algorithm.
 class TrackingService {
   final IsarRepository _isarRepository;
   StreamSubscription<Position>? _positionSubscription;
@@ -14,11 +18,18 @@ class TrackingService {
   final _positionController = StreamController<Position>.broadcast();
   final _gridController = StreamController<List<GridCell>>.broadcast();
 
+  /// Stream of current user positions.
   Stream<Position> get positionStream => _positionController.stream;
+
+  /// Stream of grid cells that have been updated due to tracking.
   Stream<List<GridCell>> get gridStream => _gridController.stream;
 
   TrackingService(this._isarRepository);
 
+  /// Initializes and starts GPS tracking for the given [state] and [county].
+  /// 
+  /// Requests location permissions if not already granted. Sets up a background
+  /// notification for continuous tracking.
   Future<void> startTracking({
     required String state,
     required String county,
@@ -50,6 +61,10 @@ class TrackingService {
     });
   }
 
+  /// Processes a single [position] update.
+  /// 
+  /// Converts the coordinate to a grid cell coordinate and interpolates
+  /// the path between the last known position and the current one.
   void _processPosition(Position position, String state, String county) async {
     const double gridSize = 0.0001; // ~11m
     
@@ -73,6 +88,9 @@ class TrackingService {
     _gridController.add(cells);
   }
 
+  /// Interpolates a search path between two grid coordinates using Bresenham's algorithm.
+  /// 
+  /// Marks all intersected cells as 'cleared' with 100% coverage.
   Future<void> _interpolatePath(int x0, int y0, int x1, int y1) async {
     int dx = (x1 - x0).abs();
     int dy = (y1 - y0).abs();
@@ -95,6 +113,7 @@ class TrackingService {
     }
   }
 
+  /// Updates a specific grid cell [x], [y] in the database as cleared.
   Future<void> _clearCell(int x, int y) async {
     final existingCell = await _isarRepository.findCell(x, y);
     if (existingCell != null && existingCell.coverage < 1.0) {
@@ -104,16 +123,19 @@ class TrackingService {
     }
   }
 
+  /// Terminates the tracking session.
   void stopTracking() {
     _positionSubscription?.cancel();
     _isTracking = false;
     _lastPosition = null;
   }
 
+  /// Clean up resources and close streams.
   void dispose() {
     _positionController.close();
     _gridController.close();
   }
 
+  /// Whether a tracking session is currently active.
   bool get isTracking => _isTracking;
 }

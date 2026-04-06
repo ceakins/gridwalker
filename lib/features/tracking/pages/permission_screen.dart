@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/permission_handler.dart';
 
+/// A multi-step onboarding screen for configuring app permissions.
+/// 
+/// Guides the user through location disclosure and camera permission 
+/// requests necessary for core search and rescue functionality.
 class PermissionOnboardingScreen extends StatefulWidget {
+  /// Callback triggered once all required permissions have been handled.
   final VoidCallback onAllPermissionsGranted;
 
   const PermissionOnboardingScreen({super.key, required this.onAllPermissionsGranted});
@@ -14,6 +19,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
+  /// Advances to the next onboarding step or completes the process.
   void _nextPage() {
     if (_currentPage < 1) {
       _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
@@ -43,6 +49,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     );
   }
 
+  /// Builds the location permission step with an explanation of usage.
   Widget _buildLocationStep() {
     return Padding(
       padding: const EdgeInsets.all(24.0),
@@ -84,6 +91,7 @@ class _PermissionOnboardingScreenState extends State<PermissionOnboardingScreen>
     );
   }
 
+  /// Builds the camera permission step for forensic photo documentation.
   Widget _buildCameraStep() {
     return Padding(
       padding: const EdgeInsets.all(24.0),

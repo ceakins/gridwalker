@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+/// The visual content for the splash screen and information dialogs.
+/// 
+/// Displays the GridWalker logo, author information, open-source 
+/// mission statement, and donation links.
 class SplashContent extends StatelessWidget {
+  /// Whether to display a close button (e.g., when shown in a dialog).
   final bool showCloseButton;
 
   const SplashContent({super.key, this.showCloseButton = false});
 
+  /// Launches an external [url] using the default system browser.
   Future<void> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (!await launchUrl(uri)) {

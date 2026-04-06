@@ -1,9 +1,18 @@
 import 'package:github/github.dart';
 import 'package:dio/dio.dart';
 
+/// A service for synchronizing search data with a remote GitHub repository.
+/// 
+/// It facilitates pulling shared case records and committing new search
+/// tracks to feature branches for coordination between search teams.
 class GitHubSyncService {
+  /// The GitHub client used for API interactions.
   final GitHub github;
+
+  /// The owner of the repository.
   final String owner;
+
+  /// The name of the repository.
   final String repo;
 
   GitHubSyncService({
@@ -13,7 +22,9 @@ class GitHubSyncService {
   });
 
   /// Pulls the latest JSON search record for a specific case.
-  /// Hierarchy: /{country}/{state}/{county}/cases/{caseId}.json
+  /// 
+  /// The expected hierarchy is `/{country}/{state}/{county}/cases/{caseId}.json`.
+  /// Returns a map of the JSON data if successful, or null otherwise.
   Future<Map<String, dynamic>?> fetchSearchRecord({
     required String country,
     required String state,
@@ -29,7 +40,7 @@ class GitHubSyncService {
       
       if (content.isFile) {
         // Fetch raw JSON and parse it
-        return null; // Logic for parsing the file content goes here
+        return null; // TODO: Implement parsing logic
       }
     } catch (e) {
       print('Failed to fetch search record: $e');
@@ -38,6 +49,8 @@ class GitHubSyncService {
   }
 
   /// Commits a new search track to a feature branch.
+  /// 
+  /// Used for uploading search telemetry and coverage data to the team repository.
   Future<void> commitSearchTrack({
     required String branchName,
     required String filePath,
@@ -48,7 +61,7 @@ class GitHubSyncService {
     
     // Create branch if not exists, then commit via the API
     try {
-      // Logic for branch creation and committing goes here
+      // TODO: Implement branch creation and committing logic
     } catch (e) {
       print('Failed to commit search track: $e');
     }

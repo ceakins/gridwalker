@@ -13,6 +13,10 @@ import 'features/sync/github_sync_service.dart';
 import 'features/splash/pages/splash_page.dart';
 import 'features/map/pages/map_page.dart';
 
+/// The entry point for the GridWalker application.
+/// 
+/// Initializes core services including Isar, SharedPreferences, 
+/// and tracking/sync services before launching the [MyApp] widget.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -52,6 +56,10 @@ Future<void> main() async {
   ));
 }
 
+/// The root widget of the application.
+/// 
+/// Sets up [MultiRepositoryProvider] and [BlocProvider] to inject services
+/// and state throughout the widget tree.
 class MyApp extends StatelessWidget {
   final IsarRepository isarRepository;
   final SettingsRepository settingsRepository;

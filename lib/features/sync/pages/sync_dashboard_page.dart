@@ -7,6 +7,10 @@ import '../github_sync_service.dart';
 import '../../../data/repositories/isar_repository.dart';
 import 'key_share_page.dart';
 
+/// A dashboard for managing data import, export, and synchronization.
+/// 
+/// It provides options for local JSON data sharing, forensic key sync 
+/// via QR codes, and cloud/mesh synchronization features.
 class SyncDashboardPage extends StatelessWidget {
   final IsarRepository isarRepository;
   final GitHubSyncService syncService;

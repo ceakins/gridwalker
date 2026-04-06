@@ -3,6 +3,10 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../data/repositories/settings_repository.dart';
 
+/// A page for sharing and scanning search case forensic keys.
+/// 
+/// Responders can display their case key as a QR code for others 
+/// to scan, or use the camera to scan a key from another device.
 class KeySharePage extends StatefulWidget {
   final SettingsRepository settingsRepository;
 

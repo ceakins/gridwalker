@@ -17,6 +17,11 @@ import '../../features/sync/github_sync_service.dart';
 import 'app_event.dart';
 import 'app_state.dart';
 
+/// The central Business Logic Component (BLoC) for the GridWalker application.
+/// 
+/// It orchestrates the flow of data between repositories, tracking services,
+/// and the UI. It handles events related to map interaction, tracking,
+/// data import/export, and forensic security.
 class AppBloc extends Bloc<AppEvent, AppState> {
   final IsarRepository isarRepository;
   final SettingsRepository settingsRepository;
@@ -53,20 +58,27 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     on<GridUpdated>(_onGridUpdated);
     on<SyncRequested>(_onSyncRequested);
 
+    // Listen to real-time updates from the tracking service
     _posSub = trackingService.positionStream.listen((p) => add(PositionUpdated(p)));
     _gridSub = trackingService.gridStream.listen((g) => add(GridUpdated(g)));
   }
 
+  /// Sets the master passphrase for forensic encryption.
   Future<void> _onSetMasterPassphrase(SetMasterPassphrase event, Emitter<AppState> emit) async {
     await settingsRepository.setMasterPassphrase(event.passphrase);
     emit(state.copyWith(isMasterPassphraseSet: true));
   }
 
+  /// Updates the setting to indicate the permission onboarding has been seen.
   Future<void> _onMarkPermissionScreenSeen(MarkPermissionScreenSeen event, Emitter<AppState> emit) async {
     await settingsRepository.setHasSeenPermissionScreen(true);
     emit(state.copyWith(hasSeenPermissionScreen: true));
   }
 
+  /// Adds a new search marker to the Isar database.
+  /// 
+  /// Handles encryption of the photo if [AddMarker.isPhotoEncrypted] is true,
+  /// using a key derived from the master passphrase and the current case ID.
   Future<void> _onAddMarker(AddMarker event, Emitter<AppState> emit) async {
     String? photoBase64 = event.photoBase64;
     if (event.isPhotoEncrypted && photoBase64 != null) {
@@ -91,13 +103,16 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(state.copyWith(markers: allMarkers));
   }
 
+  /// Exports all current grid cells and markers to a JSON file.
+  /// 
+  /// Automatically generates a filename based on the search area's geographic center.
   Future<void> _onExportGrid(ExportGrid event, Emitter<AppState> emit) async {
     try {
       final cells = await isarRepository.getAllGridCells();
       final markers = await isarRepository.getAllMarkers();
 
       final Map<String, dynamic> exportData = {
-        'version': 2, // Updated version
+        'version': 2, 
         'exportDate': DateTime.now().toIso8601String(),
         'grid': cells.map((c) => {
           'x': c.x,
@@ -119,12 +134,11 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         }).toList(),
       };
 
-      // Generate unique filename based on date and center of grid
       String filename = "gridwalker_export_${DateTime.now().millisecondsSinceEpoch}.json";
       if (cells.isNotEmpty) {
         final centerCell = cells[cells.length ~/ 2];
         final centerGeo = jsonDecode(centerCell.geoJson!);
-        final coords = centerGeo['coordinates'][0][0]; // Simplified center
+        final coords = centerGeo['coordinates'][0][0]; 
         filename = "gridwalker_${coords[1].toStringAsFixed(2)}_${coords[0].toStringAsFixed(2)}_${DateTime.now().day}_${DateTime.now().month}.json";
       }
 
@@ -139,6 +153,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     }
   }
 
+  /// Imports data from a selected JSON file into the local database.
   Future<void> _onImportGrid(ImportGrid event, Emitter<AppState> emit) async {
     try {
       if (event.passphrase != null) {
@@ -155,7 +170,6 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         final jsonStr = await file.readAsString();
         final Map<String, dynamic> data = jsonDecode(jsonStr);
 
-        // Import Grid Cells
         if (data.containsKey('grid')) {
           for (var item in data['grid']) {
             final cell = GridCell()
@@ -171,7 +185,6 @@ class AppBloc extends Bloc<AppEvent, AppState> {
           }
         }
 
-        // Import Markers
         if (data.containsKey('markers')) {
           for (var item in data['markers']) {
             final marker = SubjectRecord()
@@ -199,26 +212,33 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     }
   }
 
+  /// Toggles between satellite and vector map styles.
   Future<void> _onToggleSatellite(ToggleSatellite event, Emitter<AppState> emit) async {
     final newValue = !state.isSatellite;
     await settingsRepository.setSatellite(newValue);
     emit(state.copyWith(isSatellite: newValue));
   }
 
+  /// Toggles 3D terrain/tilt view.
   Future<void> _onToggle3D(Toggle3D event, Emitter<AppState> emit) async {
     final newValue = !state.is3D;
     await settingsRepository.set3D(newValue);
     emit(state.copyWith(is3D: newValue));
   }
 
+  /// Wipes all local search data and resets keys.
   Future<void> _onClearGrid(ClearGrid event, Emitter<AppState> emit) async {
     await isarRepository.clearAllData();
     await settingsRepository.setCasePassphrase(null);
     emit(state.copyWith(gridCells: [], markers: [], currentCaseId: null));
   }
 
+  /// Generates a rectangular search grid based on UI selection.
+  /// 
+  /// Also derives a unique forensic key for this case using SHA-256
+  /// of the master passphrase and the case ID.
   Future<void> _onCreateSearchZone(CreateSearchZone event, Emitter<AppState> emit) async {
-    // Derive a unique key for this case using SHA-256 hash of (masterPassphrase + caseId)
+    // Derive unique forensic key for this case
     final master = settingsRepository.masterPassphrase ?? "default_master_key";
     final bytes = utf8.encode("$master${event.caseId}");
     final derivedKey = sha256.convert(bytes).toString();
@@ -263,6 +283,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(state.copyWith(gridCells: allCells, currentCaseId: event.caseId));
   }
 
+  /// Initial event to load data when the app starts.
   Future<void> _onAppStarted(AppStarted event, Emitter<AppState> emit) async {
     final allCells = await isarRepository.getAllGridCells();
     final allMarkers = await isarRepository.getAllMarkers();
@@ -270,6 +291,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     emit(state.copyWith(status: AppStatus.ready, gridCells: allCells, markers: allMarkers, currentCaseId: caseId));
   }
 
+  /// Initiates background GPS tracking.
   Future<void> _onStartTracking(StartTracking event, Emitter<AppState> emit) async {
     try {
       await trackingService.startTracking(state: event.state, county: event.county);
@@ -279,19 +301,23 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     }
   }
 
+  /// Halts GPS tracking.
   void _onStopTracking(StopTracking event, Emitter<AppState> emit) {
     trackingService.stopTracking();
     emit(state.copyWith(isTracking: false));
   }
 
+  /// Responds to position updates from the tracking service.
   void _onPositionUpdated(PositionUpdated event, Emitter<AppState> emit) {
     emit(state.copyWith(currentPosition: event.position));
   }
 
+  /// Responds to grid updates from the tracking service.
   void _onGridUpdated(GridUpdated event, Emitter<AppState> emit) {
     emit(state.copyWith(gridCells: event.cells));
   }
 
+  /// Handles data synchronization with GitHub.
   Future<void> _onSyncRequested(SyncRequested event, Emitter<AppState> emit) async {
     emit(state.copyWith(isSyncing: true));
     try {

@@ -15,6 +15,10 @@ import '../../sync/pages/sync_dashboard_page.dart';
 import '../../splash/widgets/splash_content.dart';
 import '../../tracking/pages/permission_screen.dart';
 
+/// The primary mapping interface for the GridWalker application.
+/// 
+/// It integrates with MapLibre to provide interactive search area visualization,
+/// 3D terrain support, real-time user tracking, and marker management.
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
 
@@ -45,6 +49,7 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
+  /// Checks if the master forensic passphrase has been set and prompts the user if not.
   void _checkMasterPassphrase() {
     final state = context.read<AppBloc>().state;
     if (!state.isMasterPassphraseSet) {
@@ -52,6 +57,7 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  /// Displays a dialog to set the master forensic passphrase.
   Future<void> _showMasterPassphraseDialog() async {
     final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -92,6 +98,7 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  /// Verifies location and camera permissions and redirects to the onboarding screen if missing.
   Future<void> _checkPermissions() async {
     final state = context.read<AppBloc>().state;
     if (state.hasSeenPermissionScreen) return;
@@ -130,10 +137,14 @@ class _MapPageState extends State<MapPage> {
     "layers": [{"id": "satellite-layer", "type": "raster", "source": "satellite-tiles"}]
   });
 
+  /// Callback triggered when the map is initialized.
   void _onMapCreated(MapLibreMapController controller) {
     mapController = controller;
   }
 
+  /// Callback triggered when the map style is fully loaded.
+  /// 
+  /// Initializes map layers for grid cells, selection previews, and markers.
   void _onStyleLoaded() async {
     _userCircle = null; 
     _isGridSourceAdded = false;
@@ -150,6 +161,7 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  /// Configures GeoJSON sources and visual layers for the search grid.
   Future<void> _setupGridLayers() async {
     if (mapController == null) return;
     
@@ -191,6 +203,7 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  /// Handles tap events on the map, including marker selection and placement.
   Future<void> _handleGlobalTap(Offset localPosition) async {
     if (mapController == null) return;
 
@@ -234,6 +247,7 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  /// Displays detailed information about a selected search marker.
   void _showMarkerInfoDialog(int id, String name, String type) async {
     final bloc = context.read<AppBloc>();
     final marker = await bloc.isarRepository.getSubjectById(id);
@@ -291,6 +305,7 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  /// Displays a dialog to add a new search marker at the specified [latLng].
   Future<void> _showAddMarkerDialog(LatLng latLng) async {
     final nameController = TextEditingController();
     String type = 'clue';
@@ -380,6 +395,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   DateTime _lastPreviewUpdate = DateTime.now();
+  /// Updates the geographic selection rectangle on the map during a long-press drag.
   void _updateSelectionPreview() async {
     if (mapController == null || _dragStart == null || _dragEnd == null || !_isSelectionSourceAdded) return;
     if (DateTime.now().difference(_lastPreviewUpdate).inMilliseconds < 100) return;
@@ -543,6 +559,7 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  /// Displays a dialog for the user to enter a name or identifier for a new search zone.
   Future<String?> _showCaseIdDialog() async {
     final controller = TextEditingController();
     return showDialog<String>(
@@ -572,6 +589,7 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  /// Updates the user's current location marker on the map.
   void _updateUserMarker(AppState state) async {
     if (state.currentPosition == null || mapController == null) return;
     final pos = LatLng(state.currentPosition!.latitude, state.currentPosition!.longitude);
@@ -582,12 +600,14 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  /// Refreshes the search grid visualization on the map based on current state.
   void _updateGridMap(AppState state) async {
     if (mapController == null || !_isGridSourceAdded) return;
     final features = state.gridCells.map((cell) => {"type": "Feature", "geometry": jsonDecode(cell.geoJson!), "properties": {"color": cell.coverage >= 1.0 ? "#3bb2d0" : "#555555"}}).toList();
     try { await mapController?.setGeoJsonSource("grid-source", {"type": "FeatureCollection", "features": features}); } catch (e) { _isGridSourceAdded = false; }
   }
 
+  /// Refreshes all search markers (clues, subjects, etc.) on the map.
   void _updateMarkers(AppState state) async {
     if (mapController == null || !_isMarkerSourceAdded) return;
     final features = state.markers.map((marker) {
@@ -610,6 +630,7 @@ class _MapPageState extends State<MapPage> {
   }
 }
 
+/// Custom update messages for the [Upgrader] package.
 class GridWalkerUpgraderMessages extends UpgraderMessages {
   @override
   String? message(UpgraderMessage messageKey) {
