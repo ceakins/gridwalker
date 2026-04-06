@@ -89,7 +89,7 @@ const GpsTrackSchema = CollectionSchema(
   getId: _gpsTrackGetId,
   getLinks: _gpsTrackGetLinks,
   attach: _gpsTrackAttach,
-  version: '3.3.0',
+  version: '3.3.2',
 );
 
 int _gpsTrackEstimateSize(

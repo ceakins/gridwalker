@@ -6,7 +6,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:crypto/crypto.dart';
-import 'package:isar_community/isar.dart';
 import '../../core/utils/encryption_helper.dart';
 import '../../data/local/grid_cell.dart';
 import '../../data/local/subject_record.dart';
@@ -160,7 +159,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
         await settingsRepository.setCasePassphrase(event.passphrase);
       }
 
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
       );

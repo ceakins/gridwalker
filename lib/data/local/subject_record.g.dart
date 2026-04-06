@@ -128,7 +128,7 @@ const SubjectRecordSchema = CollectionSchema(
   getId: _subjectRecordGetId,
   getLinks: _subjectRecordGetLinks,
   attach: _subjectRecordAttach,
-  version: '3.3.0',
+  version: '3.3.2',
 );
 
 int _subjectRecordEstimateSize(

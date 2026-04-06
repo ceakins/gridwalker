@@ -1,5 +1,4 @@
 import 'package:github/github.dart';
-import 'package:dio/dio.dart';
 
 /// A service for synchronizing search data with a remote GitHub repository.
 /// 
@@ -57,8 +56,6 @@ class GitHubSyncService {
     required String content,
     required String commitMessage,
   }) async {
-    final slug = RepositorySlug(owner, repo);
-    
     // Create branch if not exists, then commit via the API
     try {
       // TODO: Implement branch creation and committing logic

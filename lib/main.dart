@@ -11,7 +11,6 @@ import 'data/repositories/settings_repository.dart';
 import 'features/tracking/tracking_service.dart';
 import 'features/sync/github_sync_service.dart';
 import 'features/splash/pages/splash_page.dart';
-import 'features/map/pages/map_page.dart';
 
 /// The entry point for the GridWalker application.
 /// 

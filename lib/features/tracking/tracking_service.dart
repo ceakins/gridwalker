@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:geolocator/geolocator.dart';
 import '../../data/repositories/isar_repository.dart';
 import '../../data/local/grid_cell.dart';
-import 'package:isar_community/isar.dart';
 
 /// A service responsible for handling GPS tracking and search grid updates.
 /// 

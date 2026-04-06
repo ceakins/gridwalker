@@ -14,11 +14,11 @@ import 'package:gridwalker/data/local/grid_cell.dart';
 class MockSecureStorage extends Fake implements FlutterSecureStorage {
   final Map<String, String> storage = {};
   @override
-  Future<String?> read({required String key, IOSOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? webOptions, MacOSOptions? mOptions, WindowsOptions? wOptions}) async => storage[key];
+  Future<String?> read({required String key, AppleOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? webOptions, AppleOptions? mOptions, WindowsOptions? wOptions}) async => storage[key];
   @override
-  Future<void> write({required String key, required String? value, IOSOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? webOptions, MacOSOptions? mOptions, WindowsOptions? wOptions}) async { if (value != null) storage[key] = value; }
+  Future<void> write({required String key, required String? value, AppleOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? webOptions, AppleOptions? mOptions, WindowsOptions? wOptions}) async { if (value != null) storage[key] = value; }
   @override
-  Future<void> delete({required String key, IOSOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? webOptions, MacOSOptions? mOptions, WindowsOptions? wOptions}) async { storage.remove(key); }
+  Future<void> delete({required String key, AppleOptions? iOptions, AndroidOptions? aOptions, LinuxOptions? lOptions, WebOptions? webOptions, AppleOptions? mOptions, WindowsOptions? wOptions}) async { storage.remove(key); }
 }
 
 class MockIsarRepository extends Fake implements IsarRepository {}

@@ -96,10 +96,12 @@ class _KeySharePageState extends State<KeySharePage> {
                             onPressed: () async {
                               await widget.settingsRepository.setCasePassphrase(_scannedKey);
                               if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Case key updated successfully!')),
-                                );
-                                Navigator.pop(context);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Case key updated successfully!')),
+                                  );
+                                  Navigator.pop(context);
+                                }
                               }
                             },
                             child: const Text('Apply Scanned Key'),

@@ -113,7 +113,7 @@ const GridCellSchema = CollectionSchema(
   getId: _gridCellGetId,
   getLinks: _gridCellGetLinks,
   attach: _gridCellAttach,
-  version: '3.3.0',
+  version: '3.3.2',
 );
 
 int _gridCellEstimateSize(

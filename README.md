@@ -30,8 +30,8 @@ GridWalker is built on a "Git-as-a-Backend" architecture to ensure data transpar
 ## 🚀 Getting Started
 
 ### Prerequisites
--   Flutter SDK: `^3.19.0`
--   Dart: `^3.3.0`
+-   Flutter SDK: `^3.41.6`
+-   Dart: `^3.11.4`
 -   Android SDK (for Wi-Fi Direct testing)
 -   MapLibre Offline Tiles (`.mbtiles`)
 

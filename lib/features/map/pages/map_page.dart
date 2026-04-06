@@ -111,6 +111,7 @@ class _MapPageState extends State<MapPage> {
         MaterialPageRoute(
           builder: (_) => PermissionOnboardingScreen(
             onAllPermissionsGranted: () {
+              if (!mounted) return;
               context.read<AppBloc>().add(MarkPermissionScreenSeen());
               Navigator.of(context).pop();
             },
@@ -119,7 +120,9 @@ class _MapPageState extends State<MapPage> {
       );
     } else {
       // If already granted, mark as seen so we don't check every time
-      context.read<AppBloc>().add(MarkPermissionScreenSeen());
+      if (mounted) {
+        context.read<AppBloc>().add(MarkPermissionScreenSeen());
+      }
     }
   }
 

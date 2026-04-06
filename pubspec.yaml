@@ -5,7 +5,7 @@ publish_to: 'none'
 version: 0.1.13+13
 
 environment:
-  sdk: ^3.8.1
+  sdk: ^3.11.4
 
 dependencies:
   flutter:
@@ -13,11 +13,13 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   maplibre_gl: ^0.25.0
-  isar_community: 3.3.0
-  isar_community_flutter_libs: 3.3.0
+  isar_community: ^3.3.2
+  isar_community_flutter_libs: ^3.3.2
   path_provider: ^2.1.5
   flutter_p2p_connection: ^3.0.3
   geolocator: ^14.0.2
+  permission_handler: ^11.4.0
+  flutter_plugin_android_lifecycle: ^2.0.34
   github: ^9.25.0
   dio: ^5.9.1
   flutter_bloc: ^9.1.1
@@ -25,23 +27,23 @@ dependencies:
   latlong2: ^0.9.1
   http: ^1.6.0
   shared_preferences: ^2.5.3
-  file_picker: ^10.3.10
+  file_picker: ^11.0.2
   share_plus: ^12.0.1
   url_launcher: ^6.3.2
-  upgrader: ^11.4.0
+  upgrader: ^12.5.0
   image_picker: ^1.1.2
   encrypt: ^5.0.3
   crypto: ^3.0.6
-  flutter_secure_storage: ^9.2.4
+  flutter_secure_storage: ^10.0.0
   qr_flutter: ^4.1.0
-  mobile_scanner: ^6.0.4
+  mobile_scanner: ^7.2.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^5.0.0
-  isar_community_generator: 3.3.0
+  flutter_lints: ^6.0.0
+  isar_community_generator: ^3.3.2
   build_runner: ^2.4.13
   flutter_launcher_icons: ^0.14.4
 

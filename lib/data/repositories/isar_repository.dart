@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:isar_community/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import '../local/subject_record.dart';
@@ -17,6 +18,7 @@ class IsarRepository {
   /// Initializes the Isar database and opens the required collections.
   /// 
   /// Checks for an existing instance before attempting to open a new one.
+  /// Handles potential database incompatibility by attempting to reset data.
   Future<void> init() async {
     if (Isar.getInstance() != null) {
       _isar = Isar.getInstance()!;
@@ -24,9 +26,37 @@ class IsarRepository {
     }
 
     final dir = await getApplicationDocumentsDirectory();
-    _isar = await Isar.open(
+    
+    try {
+      _isar = await _openIsar(dir.path);
+    } catch (e) {
+      // If we hit an incompatibility error (common after major Isar/MDBX upgrades),
+      // we attempt to clear the existing DB and start fresh to prevent a permanent crash.
+      if (e.toString().contains('MDBX_INCOMPATIBLE')) {
+        final success = await Isar.getInstance()?.close() ?? true;
+        if (success) {
+          // Note: In a production app, we might want to attempt a backup/migration first.
+          // For now, we prioritize app stability.
+          final isarFile = File('${dir.path}/default.isar');
+          final lockFile = File('${dir.path}/default.isar.lock');
+          if (await isarFile.exists()) await isarFile.delete();
+          if (await lockFile.exists()) await lockFile.delete();
+          
+          _isar = await _openIsar(dir.path);
+        } else {
+          rethrow;
+        }
+      } else {
+        rethrow;
+      }
+    }
+  }
+
+  /// Helper to open the Isar instance with current schemas.
+  Future<Isar> _openIsar(String path) async {
+    return await Isar.open(
       [SubjectRecordSchema, GpsTrackSchema, GridCellSchema],
-      directory: dir.path,
+      directory: path,
     );
   }
 
